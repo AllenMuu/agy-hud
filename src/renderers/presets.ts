@@ -1,8 +1,8 @@
 import { HUDState } from '../types/state.js';
 import { HUDConfig } from '../types/config.js';
 import { colors, style } from '../formatters/ansi.js';
-import { renderBar } from '../formatters/bar.js';
-import { formatDuration, formatTokens } from '../formatters/text.js';
+import { renderBar, renderRemainingBar } from '../formatters/bar.js';
+import { formatDuration, formatResetTime, formatTokens } from '../formatters/text.js';
 import { getTranslations } from '../formatters/i18n.js';
 
 export function formatModelBadge(state: HUDState): string {
@@ -43,7 +43,9 @@ export function formatWorkspaceAndGit(state: HUDState, config: HUDConfig): strin
 export function formatContextBar(state: HUDState, config: HUDConfig): string {
   const t = getTranslations(config.language);
   const percent = state.contextTokens.percent;
-  const bar = renderBar(percent, {
+  const isOverflow = percent > 100;
+
+  const bar = renderBar(Math.min(100, percent), {
     width: config.display.barWidth || 10,
     thresholds: {
       warning: config.thresholds.contextWarning,
@@ -57,11 +59,17 @@ export function formatContextBar(state: HUDState, config: HUDConfig): string {
   } else if (config.display.contextValue === 'both') {
     valStr = `${percent}% (${formatTokens(state.contextTokens.used)}/${formatTokens(state.contextTokens.limit)})`;
   } else if (config.display.contextValue === 'remaining') {
-    valStr = `${100 - percent}% ${t.remaining}`;
+    valStr = isOverflow
+      ? `0% ${t.remaining} (+${percent - 100}%)`
+      : `${100 - percent}% ${t.remaining}`;
+  }
+
+  if (isOverflow) {
+    valStr += ` [${config.language.startsWith('zh') ? '已超限' : 'OVERFLOW'}]`;
   }
 
   let color = colors.brightGreen;
-  if (percent >= config.thresholds.contextCritical) color = colors.brightRed;
+  if (percent >= config.thresholds.contextCritical || isOverflow) color = colors.brightRed;
   else if (percent >= config.thresholds.contextWarning) color = colors.brightYellow;
 
   return `${style(t.context, colors.dim)} ${bar} ${style(valStr, colors.bold, color)}`;
@@ -118,16 +126,68 @@ export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): stri
   const t = getTranslations(config.language);
 
   if (config.display.showQuota && state.quota) {
-    const qBar = renderBar(state.quota.hourlyPercent, {
-      width: 8,
-      thresholds: {
-        warning: config.thresholds.quotaWarning,
-        critical: config.thresholds.quotaCritical,
-      },
-    });
-    parts.push(
-      `${style(t.usage, colors.dim)} ${qBar} ${style(`${state.quota.hourlyPercent}%`, colors.bold)}`
-    );
+    const isRemaining = config.display.quotaDisplayMode !== 'used';
+    const quota = state.quota;
+
+    // 1. 5-Hour Limit Quota
+    if (config.display.showFiveHourQuota !== false && quota.fiveHour) {
+      const val = isRemaining ? quota.fiveHour.remainingPercent : quota.fiveHour.usedPercent;
+      const qBar = isRemaining
+        ? renderRemainingBar(val, 6)
+        : renderBar(val, {
+            width: 6,
+            thresholds: {
+              warning: config.thresholds.quotaWarning,
+              critical: config.thresholds.quotaCritical,
+            },
+          });
+
+      const unit = isRemaining ? t.remaining : '';
+      let numColor = colors.brightGreen;
+      if (isRemaining) {
+        if (val <= 20) numColor = colors.brightRed;
+        else if (val <= 40) numColor = colors.brightYellow;
+      } else {
+        if (val >= config.thresholds.quotaCritical) numColor = colors.brightRed;
+        else if (val >= config.thresholds.quotaWarning) numColor = colors.brightYellow;
+      }
+
+      const resetTime = formatResetTime(quota.fiveHour.resetsIn, config.language);
+      const resetStr = resetTime ? ` (${resetTime})` : '';
+      parts.push(
+        `${style(t.fiveHour, colors.dim)} ${qBar} ${style(`${Math.round(val)}%${unit}`, colors.bold, numColor)}${style(resetStr, colors.gray)}`
+      );
+    }
+
+    // 2. Weekly Limit Quota
+    if (config.display.showWeeklyQuota !== false && quota.weekly) {
+      const val = isRemaining ? quota.weekly.remainingPercent : quota.weekly.usedPercent;
+      const qBar = isRemaining
+        ? renderRemainingBar(val, 6)
+        : renderBar(val, {
+            width: 6,
+            thresholds: {
+              warning: config.thresholds.quotaWarning,
+              critical: config.thresholds.quotaCritical,
+            },
+          });
+
+      const unit = isRemaining ? t.remaining : '';
+      let numColor = colors.brightGreen;
+      if (isRemaining) {
+        if (val <= 20) numColor = colors.brightRed;
+        else if (val <= 40) numColor = colors.brightYellow;
+      } else {
+        if (val >= config.thresholds.quotaCritical) numColor = colors.brightRed;
+        else if (val >= config.thresholds.quotaWarning) numColor = colors.brightYellow;
+      }
+
+      const resetTime = formatResetTime(quota.weekly.resetsIn, config.language);
+      const resetStr = resetTime ? ` (${resetTime})` : '';
+      parts.push(
+        `${style(t.weekly, colors.dim)} ${qBar} ${style(`${Math.round(val)}%${unit}`, colors.bold, numColor)}${style(resetStr, colors.gray)}`
+      );
+    }
   }
 
   if (config.display.showDuration && state.sessionDurationMs !== undefined) {

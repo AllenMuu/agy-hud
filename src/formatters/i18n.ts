@@ -7,9 +7,14 @@ export interface HUDTranslations {
   agents: string;
   todos: string;
   remaining: string;
+  used: string;
   clean: string;
   dirty: string;
   time: string;
+  fiveHour: string;
+  weekly: string;
+  geminiGroup: string;
+  claudeGroup: string;
 }
 
 const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
@@ -20,9 +25,14 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     agents: 'Agents',
     todos: 'Tasks',
     remaining: 'rem.',
+    used: 'used',
     clean: 'clean',
     dirty: 'dirty',
     time: 'Time',
+    fiveHour: '5h',
+    weekly: 'Wk',
+    geminiGroup: 'Gemini',
+    claudeGroup: 'Claude/GPT',
   },
   zh: {
     context: '上下文',
@@ -30,10 +40,15 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     tools: '工具',
     agents: '子代理',
     todos: '任务',
-    remaining: '剩余',
+    remaining: '余',
+    used: '已用',
     clean: '干净',
     dirty: '已修改',
     time: '耗时',
+    fiveHour: '5h',
+    weekly: '周',
+    geminiGroup: 'Gemini',
+    claudeGroup: 'Claude/GPT',
   },
   'zh-Hans': {
     context: '上下文',
@@ -41,10 +56,15 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     tools: '工具',
     agents: '子代理',
     todos: '任务',
-    remaining: '剩余',
+    remaining: '余',
+    used: '已用',
     clean: '干净',
     dirty: '已修改',
     time: '耗时',
+    fiveHour: '5h',
+    weekly: '周',
+    geminiGroup: 'Gemini',
+    claudeGroup: 'Claude/GPT',
   },
   'zh-Hant': {
     context: '上下文',
@@ -52,13 +72,18 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     tools: '工具',
     agents: '子代理',
     todos: '任務',
-    remaining: '剩餘',
+    remaining: '餘',
+    used: '已用',
     clean: '乾淨',
     dirty: '已修改',
     time: '耗時',
+    fiveHour: '5h',
+    weekly: '周',
+    geminiGroup: 'Gemini',
+    claudeGroup: 'Claude/GPT',
   },
 };
 
-export function getTranslations(lang: HUDLanguage = 'zh-Hans'): HUDTranslations {
-  return DICTIONARY[lang] || DICTIONARY['zh-Hans'];
+export function getTranslations(lang: HUDLanguage = 'en'): HUDTranslations {
+  return DICTIONARY[lang] || DICTIONARY['en'];
 }

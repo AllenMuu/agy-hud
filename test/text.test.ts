@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stringWidth, truncate, formatTokens, formatDuration } from '../src/formatters/text.js';
+import { stringWidth, truncate, formatTokens, formatDuration, formatResetTime } from '../src/formatters/text.js';
 
 describe('text formatters', () => {
   it('should compute string width accurately for ASCII and CJK', () => {
@@ -24,5 +24,13 @@ describe('text formatters', () => {
     expect(formatDuration(45000)).toBe('45s');
     expect(formatDuration(90000)).toBe('1m 30s');
     expect(formatDuration(0)).toBe('0s');
+  });
+
+  it('should format reset time into days and hours', () => {
+    expect(formatResetTime('165h 15m', 'zh-Hans')).toBe('6天21h');
+    expect(formatResetTime('166h 2m', 'zh-Hans')).toBe('6天22h');
+    expect(formatResetTime('168h', 'zh-Hans')).toBe('7天');
+    expect(formatResetTime('2h 15m', 'zh-Hans')).toBe('2h 15m');
+    expect(formatResetTime('165h 15m', 'en')).toBe('6d 21h');
   });
 });

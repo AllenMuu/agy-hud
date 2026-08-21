@@ -7,6 +7,7 @@ import {
   SubagentActivity,
   TodoProgress,
 } from '../types/antigravity.js';
+import { parseUsageText, saveQuotaCache } from './quota-collector.js';
 
 export interface TranscriptTailResult {
   recentTools: RecentToolActivity[];
@@ -239,6 +240,23 @@ export function scanTranscriptTail(
             total,
             completed,
           };
+        }
+      }
+
+      // 3. Auto-sync Quota if usage output is detected in transcript
+      if (
+        step.content &&
+        !step.content.includes('truncated') &&
+        (step.content.includes('Limit Remaining') ||
+          step.content.includes('GEMINI MODELS') ||
+          step.content.includes('CLAUDE AND GPT MODELS'))
+      ) {
+        const parsed = parseUsageText(step.content);
+        if (
+          (parsed.gemini && parsed.gemini.fiveHour.resetsIn) ||
+          (parsed.claudeGpt && parsed.claudeGpt.fiveHour.resetsIn)
+        ) {
+          saveQuotaCache(parsed);
         }
       }
     } catch {

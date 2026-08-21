@@ -1,9 +1,29 @@
 import { RecentToolActivity, SubagentActivity, TodoProgress } from './antigravity.js';
 import { VCSState } from './vcs.js';
 
+export type ModelQuotaGroup = 'gemini' | 'claude_gpt';
+
+export interface QuotaLimitItem {
+  remainingPercent: number;
+  usedPercent: number;
+  resetsIn?: string;
+  resetsInSeconds?: number;
+}
+
+export interface ModelGroupQuotaState {
+  group: ModelQuotaGroup;
+  fiveHour?: QuotaLimitItem;
+  weekly?: QuotaLimitItem;
+  // Legacy backward compatibility
+  hourlyPercent: number;
+  weeklyPercent: number;
+  resetsInSeconds?: number;
+}
+
 export interface HUDState {
   modelName: string;
   provider?: string;
+  modelGroup: ModelQuotaGroup;
   workspaceName: string;
   workspacePath: string;
   vcs: VCSState;
@@ -12,13 +32,10 @@ export interface HUDState {
     limit: number;
     percent: number;
   };
-  quota?: {
-    hourlyPercent: number;
-    weeklyPercent: number;
-    resetsInSeconds?: number;
-  };
+  quota?: ModelGroupQuotaState;
   recentTools: RecentToolActivity[];
   activeSubagents: SubagentActivity[];
   todoProgress?: TodoProgress;
   sessionDurationMs?: number;
 }
+

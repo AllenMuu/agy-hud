@@ -9,14 +9,14 @@ It provides instant situational awareness directly inside your terminal, showing
 ```text
 [Gemini 3.7 Flash] │ agy-hud git:(main*) [↑1] │ Context █████░░░░░ 45% (45k/1.0M)
 ◐ Edit: layout.ts │ ✓ Read: package.json ×3 │ ✓ Grep: "statusLine" ×2 │ ◐ Agent [Researcher]
-▸ Tasks [2/5] (40%) │ Usage ██░░░░░░░░ 28% │ Time 1m 30s
+▸ Tasks [2/5] (40%) │ 5h █████░ 77% rem. (2h 15m) │ Wk ██████ 96% rem. │ Time 1m 30s
 ```
 
 ---
 
 ## 🌟 Key Features
 
-- **📊 Context & Token Meter**: Visual gradient bar (green → yellow → red) tracking token capacity with zero guessing.
+- **📊 Dynamic Context & Multi-Model Rate Limits**: Visual token meter plus automated switching between Gemini and Claude/GPT 5-hour and weekly quotas with reset countdowns.
 - **⚡ High-Performance Transcript Engine**: Fast tail-chunk reverse scanner (reads last 64KB~128KB in < 5ms) with a 15ms safety circuit breaker.
 - **🛠️ Real-Time Tool Activity**: Shows recent file reads, edits, greps, and commands as they happen.
 - **🤖 Subagents & Task Tracking**: Monitor background subagent roles, state, and planned todo milestones.

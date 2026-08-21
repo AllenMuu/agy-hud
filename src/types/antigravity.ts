@@ -22,11 +22,36 @@ export interface AntigravityStdinPayload {
     total_input_tokens?: number;
     total_output_tokens?: number;
   };
+  context_window?: {
+    total_input_tokens?: number;
+    total_output_tokens?: number;
+    context_window_size?: number;
+    estimated_tokens_used?: number;
+    current_usage?: {
+      input_tokens?: number;
+      output_tokens?: number;
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+    };
+    remaining_percentage?: number;
+    used_percentage?: number;
+  };
   quota?: {
     hourly_percent?: number;
     weekly_percent?: number;
     resets_in_seconds?: number;
+    gemini?: {
+      five_hour_percent?: number;
+      weekly_percent?: number;
+      resets_in?: string;
+    };
+    claude_gpt?: {
+      five_hour_percent?: number;
+      weekly_percent?: number;
+      resets_in?: string;
+    };
   };
+  rate_limits?: Record<string, any>;
   current_turn?: {
     turn_index?: number;
     status?: 'idle' | 'running' | 'waiting_for_input' | 'error';

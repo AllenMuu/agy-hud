@@ -87,3 +87,46 @@ export function formatDuration(ms?: number): string {
   }
   return `${seconds}s`;
 }
+
+/**
+ * Formats quota reset time string (e.g. "165h 15m" -> "6天21h" / "6d 21h", "2h 15m" -> "2h 15m").
+ */
+export function formatResetTime(resetsIn?: string, lang = 'en'): string {
+  if (!resetsIn || !resetsIn.trim()) return '';
+
+  const clean = resetsIn.trim();
+  const isZh = lang.startsWith('zh');
+
+  // If it already has days like "6d 21h" or "6天21h"
+  if (clean.includes('d') || clean.includes('天') || clean.includes('day')) {
+    return clean;
+  }
+
+  // Parse hours and minutes
+  const hMatch = clean.match(/(\d+)\s*h/i);
+  const mMatch = clean.match(/(\d+)\s*m/i);
+
+  if (hMatch) {
+    const totalHours = parseInt(hMatch[1], 10);
+    const mins = mMatch ? parseInt(mMatch[1], 10) : 0;
+
+    if (totalHours >= 24) {
+      const days = Math.floor(totalHours / 24);
+      const remHours = totalHours % 24;
+
+      if (isZh) {
+        return remHours > 0 ? `${days}天${remHours}h` : `${days}天`;
+      } else {
+        return remHours > 0 ? `${days}d ${remHours}h` : `${days}d`;
+      }
+    } else {
+      if (mins > 0) {
+        return `${totalHours}h ${mins}m`;
+      }
+      return `${totalHours}h`;
+    }
+  }
+
+  return clean;
+}
+

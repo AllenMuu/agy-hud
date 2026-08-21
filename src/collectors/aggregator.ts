@@ -1,13 +1,19 @@
 import path from 'node:path';
 import { AntigravityStdinPayload } from '../types/antigravity.js';
 import { HUDConfig } from '../types/config.js';
-import { HUDState } from '../types/state.js';
+import { HUDState, ModelGroupQuotaState } from '../types/state.js';
 import { resolveTranscriptPath, scanTranscriptTail } from './transcript-tail.js';
 import { getVCSState } from './vcs-collector.js';
-import { loadQuotaCache, saveQuotaCache } from './quota-collector.js';
+import {
+  detectModelGroup,
+  getQuotaForModelGroup,
+  loadQuotaCache,
+  saveQuotaCache,
+  QuotaCacheData,
+} from './quota-collector.js';
 
 export function aggregateState(payload: AntigravityStdinPayload, config: HUDConfig): HUDState {
-  // 1. Model & Provider
+  // 1. Model & Provider & Model Quota Group
   let modelName = 'Gemini';
   let provider: string | undefined;
 
@@ -18,6 +24,8 @@ export function aggregateState(payload: AntigravityStdinPayload, config: HUDConf
     provider = payload.model.provider;
   }
 
+  const modelGroup = detectModelGroup(modelName, provider);
+
   // 2. Workspace
   const workspacePath = payload.workspace?.root_path || process.cwd();
   const workspaceName = payload.workspace?.workspace_name || path.basename(workspacePath) || 'workspace';
@@ -25,36 +33,109 @@ export function aggregateState(payload: AntigravityStdinPayload, config: HUDConf
   // 3. VCS
   const vcs = getVCSState(workspacePath, config.git);
 
-  // 4. Context Tokens
-  const used = payload.context?.tokens_used || 0;
-  const limit = payload.context?.tokens_limit || 1000000;
-  const percent =
-    payload.context?.tokens_percent !== undefined
-      ? payload.context.tokens_percent
-      : limit > 0
-        ? Math.round((used / limit) * 100)
-        : 0;
+  // 4. Context Tokens (support context and context_window formats)
+  const cw = payload.context_window;
+  const ctx = payload.context;
 
-  // 5. Quota & Limits
-  let quota: HUDState['quota'] = payload.quota
-    ? {
-        hourlyPercent: payload.quota.hourly_percent ?? 0,
-        weeklyPercent: payload.quota.weekly_percent ?? 0,
-        resetsInSeconds: payload.quota.resets_in_seconds,
-      }
-    : undefined;
+  const used =
+    cw?.estimated_tokens_used ??
+    (cw?.current_usage
+      ? (cw.current_usage.input_tokens || 0) + (cw.current_usage.output_tokens || 0)
+      : undefined) ??
+    ctx?.tokens_used ??
+    0;
 
-  if (quota) {
-    saveQuotaCache(quota);
-  } else {
-    const cached = loadQuotaCache();
-    if (cached) {
-      quota = {
-        hourlyPercent: cached.hourlyPercent,
-        weeklyPercent: cached.weeklyPercent,
-        resetsInSeconds: cached.resetsInSeconds,
+  const limit =
+    cw?.context_window_size ??
+    ctx?.tokens_limit ??
+    (modelName.toLowerCase().includes('gemini')
+      ? 1000000
+      : modelName.toLowerCase().includes('gpt')
+        ? 128000
+        : 200000);
+
+  let percent = 0;
+  if (cw?.used_percentage !== undefined) {
+    percent = Math.round(cw.used_percentage);
+  } else if (cw?.remaining_percentage !== undefined) {
+    percent = Math.max(0, Math.min(100, Math.round(100 - cw.remaining_percentage)));
+  } else if (ctx?.tokens_percent !== undefined) {
+    percent = Math.round(ctx.tokens_percent);
+  } else if (limit > 0) {
+    percent = Math.max(0, Math.min(100, Math.round((used / limit) * 100)));
+  }
+
+  // 5. Quota & Limits (Multi-model group aware)
+  if (payload.quota?.gemini || payload.quota?.claude_gpt) {
+    const dataToSave: QuotaCacheData = {
+      updatedAt: Date.now(),
+    };
+    if (payload.quota.gemini) {
+      const g5 = payload.quota.gemini.five_hour_percent ?? 0;
+      const gw = payload.quota.gemini.weekly_percent ?? 0;
+      dataToSave.gemini = {
+        fiveHour: {
+          remainingPercent: 100 - g5,
+          usedPercent: g5,
+          resetsIn: payload.quota.gemini.resets_in,
+        },
+        weekly: {
+          remainingPercent: 100 - gw,
+          usedPercent: gw,
+        },
       };
     }
+    if (payload.quota.claude_gpt) {
+      const c5 = payload.quota.claude_gpt.five_hour_percent ?? 0;
+      const cw = payload.quota.claude_gpt.weekly_percent ?? 0;
+      dataToSave.claudeGpt = {
+        fiveHour: {
+          remainingPercent: 100 - c5,
+          usedPercent: c5,
+          resetsIn: payload.quota.claude_gpt.resets_in,
+        },
+        weekly: {
+          remainingPercent: 100 - cw,
+          usedPercent: cw,
+        },
+      };
+    }
+    saveQuotaCache(dataToSave);
+  } else if (payload.quota?.hourly_percent !== undefined || payload.quota?.weekly_percent !== undefined) {
+    const hp = payload.quota.hourly_percent ?? 0;
+    const wp = payload.quota.weekly_percent ?? 0;
+    const singleQuota = {
+      fiveHour: {
+        remainingPercent: 100 - hp,
+        usedPercent: hp,
+        resetsInSeconds: payload.quota.resets_in_seconds,
+      },
+      weekly: {
+        remainingPercent: 100 - wp,
+        usedPercent: wp,
+      },
+    };
+    saveQuotaCache({
+      [modelGroup === 'claude_gpt' ? 'claudeGpt' : 'gemini']: singleQuota,
+      hourlyPercent: hp,
+      weeklyPercent: wp,
+      resetsInSeconds: payload.quota.resets_in_seconds,
+    });
+  }
+
+  const cached = loadQuotaCache();
+  const groupQuota = getQuotaForModelGroup(modelGroup, cached);
+
+  let quota: ModelGroupQuotaState | undefined;
+  if (groupQuota) {
+    quota = {
+      group: modelGroup,
+      fiveHour: groupQuota.fiveHour,
+      weekly: groupQuota.weekly,
+      hourlyPercent: groupQuota.fiveHour.usedPercent,
+      weeklyPercent: groupQuota.weekly.usedPercent,
+      resetsInSeconds: groupQuota.fiveHour.resetsInSeconds,
+    };
   }
 
   // 6. Transcript analysis (Tail chunk scanner)
@@ -83,6 +164,7 @@ export function aggregateState(payload: AntigravityStdinPayload, config: HUDConf
   return {
     modelName,
     provider,
+    modelGroup,
     workspaceName,
     workspacePath,
     vcs,
