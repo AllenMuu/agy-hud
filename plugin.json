@@ -1,0 +1,24 @@
+{
+  "name": "agy-hud",
+  "version": "1.0.0",
+  "description": "Real-time, high-performance status-line HUD plugin for Antigravity CLI",
+  "author": "Allen Muu",
+  "entry": "dist/agy-hud.js",
+  "commands": [
+    {
+      "name": "agy-hud:setup",
+      "description": "Setup and enable agy-hud status line",
+      "exec": "node dist/agy-hud.js setup"
+    },
+    {
+      "name": "agy-hud:configure",
+      "description": "Interactive configuration wizard for agy-hud",
+      "exec": "node dist/agy-hud.js configure"
+    },
+    {
+      "name": "agy-hud:doctor",
+      "description": "Health check and diagnostics for agy-hud",
+      "exec": "node dist/agy-hud.js doctor"
+    }
+  ]
+}

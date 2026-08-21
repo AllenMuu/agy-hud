@@ -1,0 +1,36 @@
+{
+  "name": "agy-hud",
+  "version": "1.0.0",
+  "description": "Real-time, high-performance status-line HUD plugin for Antigravity CLI",
+  "main": "dist/agy-hud.js",
+  "bin": {
+    "agy-hud": "./dist/agy-hud.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && node scripts/package.mjs"
+  },
+  "keywords": [
+    "antigravity",
+    "antigravity-cli",
+    "statusline",
+    "hud",
+    "plugin",
+    "tui"
+  ],
+  "author": "Allen Muu",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
