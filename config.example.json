@@ -1,10 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/AllenMuu/agy-hud/main/schema.json",
   "preset": "full",
-  "language": "zh-Hans",
+  "language": "en",
   "display": {
     "preset": "full",
-    "language": "zh-Hans",
+    "language": "en",
     "lineLayout": "expanded",
     "showModel": true,
     "showWorkspace": true,

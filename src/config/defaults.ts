@@ -2,10 +2,10 @@ import { HUDConfig } from '../types/config.js';
 
 export const DEFAULT_CONFIG: HUDConfig = {
   preset: 'full',
-  language: 'zh-Hans',
+  language: 'en',
   display: {
     preset: 'full',
-    language: 'zh-Hans',
+    language: 'en',
     lineLayout: 'expanded',
     showModel: true,
     showWorkspace: true,
@@ -16,6 +16,9 @@ export const DEFAULT_CONFIG: HUDConfig = {
     showAgents: true,
     showTodos: true,
     showQuota: true,
+    showFiveHourQuota: true,
+    showWeeklyQuota: true,
+    quotaDisplayMode: 'remaining',
     showDuration: true,
     barWidth: 10,
     pathLevels: 1,

@@ -23,6 +23,9 @@ export interface DisplayConfig {
   showAgents: boolean;
   showTodos: boolean;
   showQuota: boolean;
+  showFiveHourQuota?: boolean;
+  showWeeklyQuota?: boolean;
+  quotaDisplayMode?: 'remaining' | 'used'; // 'remaining' (default) shows % remaining, 'used' shows % used
   showDuration: boolean;
   barWidth: number;
   pathLevels: number | 'full';

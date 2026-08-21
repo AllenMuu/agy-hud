@@ -6,6 +6,7 @@ export function createMockState(): HUDState {
   return {
     modelName: 'Gemini 3.7 Flash',
     provider: 'Google',
+    modelGroup: 'gemini',
     workspaceName: 'agy-hud',
     workspacePath: process.cwd(),
     vcs: {
@@ -24,9 +25,20 @@ export function createMockState(): HUDState {
       percent: 45,
     },
     quota: {
-      hourlyPercent: 28,
-      weeklyPercent: 15,
-      resetsInSeconds: 3600,
+      group: 'gemini',
+      fiveHour: {
+        remainingPercent: 77,
+        usedPercent: 23,
+        resetsIn: '2h 15m',
+      },
+      weekly: {
+        remainingPercent: 96,
+        usedPercent: 4,
+        resetsIn: '165h 15m',
+      },
+      hourlyPercent: 23,
+      weeklyPercent: 4,
+      resetsInSeconds: 8100,
     },
     recentTools: [
       { name: 'Edit', summary: 'layout.ts', status: 'running', count: 1 },

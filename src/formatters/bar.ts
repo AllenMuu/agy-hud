@@ -38,3 +38,26 @@ export function renderBar(percent: number, options: BarOptions = {}): string {
 
   return `${filledStr}${emptyStr}`;
 }
+
+/**
+ * Generates a colorful progress bar for remaining quota / resource (e.g. 77% remaining).
+ * High remaining percentage = Green, medium = Yellow, low = Red.
+ */
+export function renderRemainingBar(percent: number, width = 8): string {
+  const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+  const filledCount = Math.round((clamped / 100) * width);
+  const emptyCount = width - filledCount;
+
+  let barColor = colors.brightGreen;
+  if (clamped <= 20) {
+    barColor = colors.brightRed;
+  } else if (clamped <= 40) {
+    barColor = colors.brightYellow;
+  }
+
+  const filledStr = style('█'.repeat(filledCount), barColor);
+  const emptyStr = style('░'.repeat(emptyCount), colors.gray);
+
+  return `${filledStr}${emptyStr}`;
+}
+
