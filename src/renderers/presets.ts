@@ -2,7 +2,7 @@ import { HUDState } from '../types/state.js';
 import { HUDConfig } from '../types/config.js';
 import { colors, style } from '../formatters/ansi.js';
 import { renderBar, renderRemainingBar } from '../formatters/bar.js';
-import { formatDuration, formatResetTime, formatTokens } from '../formatters/text.js';
+import { formatDuration, formatResetTime, formatTokens, stringWidth } from '../formatters/text.js';
 import { getTranslations } from '../formatters/i18n.js';
 
 export function formatModelBadge(state: HUDState): string {
@@ -11,7 +11,11 @@ export function formatModelBadge(state: HUDState): string {
   return style(`[${provider}${name}]`, colors.bold, colors.brightCyan);
 }
 
-export function formatWorkspaceAndGit(state: HUDState, config: HUDConfig): string {
+export function formatWorkspaceAndGitItems(
+  state: HUDState,
+  config: HUDConfig,
+  maxWidth?: number
+): string[] {
   const parts: string[] = [];
 
   if (config.display.showWorkspace && state.workspaceName) {
@@ -37,7 +41,20 @@ export function formatWorkspaceAndGit(state: HUDState, config: HUDConfig): strin
     parts.push(style(`jj:(${state.vcs.branch})`, colors.magenta));
   }
 
-  return parts.join(' ');
+  if (parts.length <= 1) {
+    return parts;
+  }
+
+  const combined = parts.join(' ');
+  if (maxWidth && stringWidth(combined) > maxWidth) {
+    return parts;
+  }
+  return [combined];
+}
+
+export function formatWorkspaceAndGit(state: HUDState, config: HUDConfig): string {
+  const items = formatWorkspaceAndGitItems(state, config);
+  return items.join(' ');
 }
 
 export function formatContextBar(state: HUDState, config: HUDConfig): string {
@@ -75,12 +92,12 @@ export function formatContextBar(state: HUDState, config: HUDConfig): string {
   return `${style(t.context, colors.dim)} ${bar} ${style(valStr, colors.bold, color)}`;
 }
 
-export function formatToolActivity(state: HUDState, config: HUDConfig): string | null {
+export function formatToolItems(state: HUDState, config: HUDConfig): string[] {
   if (!config.display.showTools || !state.recentTools.length) {
-    return null;
+    return [];
   }
 
-  const items = state.recentTools.map((t) => {
+  return state.recentTools.map((t) => {
     const icon = t.status === 'running' ? '◐' : t.status === 'error' ? '✘' : '✓';
     const color =
       t.status === 'running'
@@ -92,22 +109,28 @@ export function formatToolActivity(state: HUDState, config: HUDConfig): string |
     const detail = t.summary ? `: ${t.summary}` : '';
     return `${style(icon, color)} ${style(t.name + detail, colors.white)}${countStr}`;
   });
-
-  return items.join(style(' │ ', colors.gray));
 }
 
-export function formatSubagents(state: HUDState, config: HUDConfig): string | null {
+export function formatToolActivity(state: HUDState, config: HUDConfig): string | null {
+  const items = formatToolItems(state, config);
+  return items.length ? items.join(style(' │ ', colors.gray)) : null;
+}
+
+export function formatSubagentItems(state: HUDState, config: HUDConfig): string[] {
   if (!config.display.showAgents || !state.activeSubagents.length) {
-    return null;
+    return [];
   }
 
-  const items = state.activeSubagents.map((sub) => {
+  return state.activeSubagents.map((sub) => {
     const icon = sub.state === 'running' ? '◐' : '✓';
     const role = sub.role || sub.typeName;
     return `${style(icon, colors.brightCyan)} ${style(`[${role}]`, colors.cyan)}`;
   });
+}
 
-  return items.join(style(' │ ', colors.gray));
+export function formatSubagents(state: HUDState, config: HUDConfig): string | null {
+  const items = formatSubagentItems(state, config);
+  return items.length ? items.join(style(' │ ', colors.gray)) : null;
 }
 
 export function formatTodoProgress(state: HUDState, config: HUDConfig): string | null {
@@ -121,7 +144,7 @@ export function formatTodoProgress(state: HUDState, config: HUDConfig): string |
   return `${style('▸', colors.brightYellow)} ${style(`${t.todos} [${completed}/${total}]`, colors.bold, colors.white)} ${style(`(${pct}%)`, colors.gray)}`;
 }
 
-export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): string | null {
+export function formatQuotaAndDurationItems(state: HUDState, config: HUDConfig): string[] {
   const parts: string[] = [];
   const t = getTranslations(config.language);
 
@@ -129,9 +152,13 @@ export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): stri
     const isRemaining = config.display.quotaDisplayMode !== 'used';
     const quota = state.quota;
 
-    // 1. 5-Hour Limit Quota
-    if (config.display.showFiveHourQuota !== false && quota.fiveHour) {
-      const val = isRemaining ? quota.fiveHour.remainingPercent : quota.fiveHour.usedPercent;
+    // 1. Short-Term Limit Quota (5-Hour / 6-Hour / Hourly)
+    const shortTermQuota = quota.shortTerm || quota.fiveHour;
+    const showShort =
+      config.display.showShortTermQuota !== false && config.display.showFiveHourQuota !== false;
+
+    if (showShort && shortTermQuota) {
+      const val = isRemaining ? shortTermQuota.remainingPercent : shortTermQuota.usedPercent;
       const qBar = isRemaining
         ? renderRemainingBar(val, 6)
         : renderBar(val, {
@@ -152,10 +179,24 @@ export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): stri
         else if (val >= config.thresholds.quotaWarning) numColor = colors.brightYellow;
       }
 
-      const resetTime = formatResetTime(quota.fiveHour.resetsIn, config.language);
+      const label =
+        shortTermQuota.label ||
+        (shortTermQuota.windowHours === 6
+          ? t.sixHour
+          : shortTermQuota.windowHours === 5
+            ? t.fiveHour
+            : shortTermQuota.windowHours
+              ? `${shortTermQuota.windowHours}h`
+              : t.fiveHour);
+
+      const resetTime = formatResetTime(
+        shortTermQuota.resetsIn,
+        config.language,
+        shortTermQuota.resetTimestamp
+      );
       const resetStr = resetTime ? ` (${resetTime})` : '';
       parts.push(
-        `${style(t.fiveHour, colors.dim)} ${qBar} ${style(`${Math.round(val)}%${unit}`, colors.bold, numColor)}${style(resetStr, colors.gray)}`
+        `${style(label, colors.dim)} ${qBar} ${style(`${Math.round(val)}%${unit}`, colors.bold, numColor)}${style(resetStr, colors.gray)}`
       );
     }
 
@@ -182,7 +223,11 @@ export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): stri
         else if (val >= config.thresholds.quotaWarning) numColor = colors.brightYellow;
       }
 
-      const resetTime = formatResetTime(quota.weekly.resetsIn, config.language);
+      const resetTime = formatResetTime(
+        quota.weekly.resetsIn,
+        config.language,
+        quota.weekly.resetTimestamp
+      );
       const resetStr = resetTime ? ` (${resetTime})` : '';
       parts.push(
         `${style(t.weekly, colors.dim)} ${qBar} ${style(`${Math.round(val)}%${unit}`, colors.bold, numColor)}${style(resetStr, colors.gray)}`
@@ -196,5 +241,10 @@ export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): stri
     );
   }
 
+  return parts;
+}
+
+export function formatQuotaAndDuration(state: HUDState, config: HUDConfig): string | null {
+  const parts = formatQuotaAndDurationItems(state, config);
   return parts.length ? parts.join(style(' │ ', colors.gray)) : null;
 }

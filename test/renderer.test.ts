@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { renderHUD } from '../src/renderers/layout.js';
+import { renderHUD, wrapSegments } from '../src/renderers/layout.js';
 import { DEFAULT_CONFIG } from '../src/config/defaults.js';
 import { createMockState } from '../src/tui/preview.js';
 import { stripAnsi } from '../src/formatters/ansi.js';
 
 describe('renderHUD', () => {
-  it('should render Minimal preset on 1 line', () => {
+  it('should render Minimal preset on 1 line when width is sufficient', () => {
     const state = createMockState();
     const config = {
       ...DEFAULT_CONFIG,
       preset: 'minimal' as const,
-      display: { ...DEFAULT_CONFIG.display, preset: 'minimal' as const },
+      display: { ...DEFAULT_CONFIG.display, preset: 'minimal' as const, maxWidth: 120 },
     };
 
     const output = stripAnsi(renderHUD(state, config));
@@ -20,12 +20,12 @@ describe('renderHUD', () => {
     expect(lines[0]).toContain('45%');
   });
 
-  it('should render Essential preset on 2 lines', () => {
+  it('should render Essential preset on 2 lines when width is sufficient', () => {
     const state = createMockState();
     const config = {
       ...DEFAULT_CONFIG,
       preset: 'essential' as const,
-      display: { ...DEFAULT_CONFIG.display, preset: 'essential' as const },
+      display: { ...DEFAULT_CONFIG.display, preset: 'essential' as const, maxWidth: 120 },
     };
 
     const output = stripAnsi(renderHUD(state, config));
@@ -33,23 +33,122 @@ describe('renderHUD', () => {
     expect(lines.length).toBe(2);
     expect(lines[0]).toContain('Gemini');
     expect(lines[0]).toContain('git:(main*)');
+    expect(lines[0]).toContain('Context');
     expect(lines[1]).toContain('Edit: layout.ts');
   });
 
-  it('should render Full preset with 3 lines', () => {
+  it('should render Full preset with 3 lines when width is sufficient', () => {
     const state = createMockState();
     const config = {
       ...DEFAULT_CONFIG,
       language: 'en' as const,
       preset: 'full' as const,
-      display: { ...DEFAULT_CONFIG.display, language: 'en' as const, preset: 'full' as const },
+      display: { ...DEFAULT_CONFIG.display, language: 'en' as const, preset: 'full' as const, maxWidth: 120 },
     };
 
     const output = stripAnsi(renderHUD(state, config));
     const lines = output.split('\n');
     expect(lines.length).toBe(3);
     expect(lines[0]).toContain('Gemini');
+    expect(lines[0]).toContain('git:(main*)');
+    expect(lines[0]).toContain('Context');
     expect(lines[1]).toContain('Edit: layout.ts');
     expect(lines[2]).toContain('Tasks [2/5]');
+  });
+
+  it('should wrap line 1 onto a new line when info is too long, displaying full content without truncation', () => {
+    const state = createMockState();
+    // Simulate long workspace name and git branch
+    state.workspaceName = 'very-long-workspace-project-name';
+    state.vcs.branch = 'feature/very-long-descriptive-branch-name-12345';
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'essential' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'essential' as const,
+        maxWidth: 80,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    const lines = output.split('\n');
+
+    // Should wrap line 1 into multiple lines because width exceeds 80
+    expect(lines.length).toBeGreaterThan(2);
+
+    // Verify all parts of Line 1 are fully present and not truncated
+    expect(output).toContain('Google | Gemini 3.7 Flash');
+    expect(output).toContain('very-long-workspace-project-name');
+    expect(output).toContain('feature/very-long-descriptive-branch-name-12345');
+    expect(output).toContain('Context');
+    expect(output).toContain('45%');
+
+    // Verify each rendered line does not exceed maxWidth
+    for (const line of lines) {
+      expect(line.length).toBeLessThanOrEqual(80);
+    }
+  });
+
+  it('wrapSegments wraps long segments across multiple lines correctly', () => {
+    const segs = ['[Gemini 1.5 Pro]', 'my-workspace git:(main*)', 'Context [████░░░░░░] 45% (90k/200k)'];
+    // Total joined width is approx 18 + 3 + 24 + 3 + 35 = 83 cols
+    // When maxWidth is 50, seg1 + seg2 = 45 cols <= 50, seg3 = 35 cols -> wraps to 2 lines
+    const wrapped = wrapSegments(segs, 50, ' │ ');
+    expect(wrapped.length).toBe(2);
+    expect(wrapped[0]).toBe('[Gemini 1.5 Pro] │ my-workspace git:(main*)');
+    expect(wrapped[1]).toBe('Context [████░░░░░░] 45% (90k/200k)');
+
+    // When maxWidth is 30, each segment is on its own line -> 3 lines
+    const wrappedNarrow = wrapSegments(segs, 30, ' │ ');
+    expect(wrappedNarrow.length).toBe(3);
+    expect(wrappedNarrow[0]).toBe('[Gemini 1.5 Pro]');
+    expect(wrappedNarrow[1]).toBe('my-workspace git:(main*)');
+    expect(wrappedNarrow[2]).toBe('Context [████░░░░░░] 45% (90k/200k)');
+  });
+
+  it('should wrap minimal preset when model name or context bar is too long for terminal', () => {
+    const state = createMockState();
+    state.modelName = 'very-long-custom-fine-tuned-model-v2-preview-experimental';
+    state.provider = 'CustomProviderWithVeryLongName';
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'minimal' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'minimal' as const,
+        maxWidth: 60,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    const lines = output.split('\n');
+    expect(lines.length).toBe(2);
+    expect(lines[0]).toContain('CustomProviderWithVeryLongName');
+    expect(lines[1]).toContain('Context');
+    expect(lines[1]).toContain('45%');
+  });
+
+  it('should handle CJK fullwidth characters correctly when wrapping', () => {
+    const state = createMockState();
+    state.workspaceName = '我的前端项目工程仓库';
+    state.vcs.branch = '功能/用户认证与权限系统重构';
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'essential' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'essential' as const,
+        maxWidth: 60,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    expect(output).toContain('我的前端项目工程仓库');
+    expect(output).toContain('功能/用户认证与权限系统重构');
+    expect(output).toContain('Context');
   });
 });

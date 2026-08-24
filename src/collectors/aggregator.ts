@@ -65,7 +65,27 @@ export function aggregateState(payload: AntigravityStdinPayload, config: HUDConf
     percent = Math.max(0, Math.min(100, Math.round((used / limit) * 100)));
   }
 
-  // 5. Quota & Limits (Multi-model group aware)
+  // 5. Transcript analysis (Tail chunk scanner)
+  const transcriptPath = resolveTranscriptPath(
+    payload.transcript_path,
+    payload.app_data_dir,
+    payload.conversation_id
+  );
+
+  let recentTools: HUDState['recentTools'] = [];
+  let activeSubagents: HUDState['activeSubagents'] = [];
+  let todoProgress: HUDState['todoProgress'] | undefined;
+
+  if (transcriptPath) {
+    const tailBytes = config.advanced?.transcriptTailBytes || 64 * 1024;
+    const timeoutMs = config.advanced?.transcriptTimeoutMs || 15;
+    const result = scanTranscriptTail(transcriptPath, tailBytes, timeoutMs);
+    recentTools = result.recentTools;
+    activeSubagents = result.activeSubagents;
+    todoProgress = result.todoProgress;
+  }
+
+  // 6. Quota & Limits (Multi-model group aware)
   if (payload.quota?.gemini || payload.quota?.claude_gpt) {
     const dataToSave: QuotaCacheData = {
       updatedAt: Date.now(),
@@ -128,34 +148,16 @@ export function aggregateState(payload: AntigravityStdinPayload, config: HUDConf
 
   let quota: ModelGroupQuotaState | undefined;
   if (groupQuota) {
+    const shortTerm = groupQuota.shortTerm || groupQuota.fiveHour;
     quota = {
       group: modelGroup,
       fiveHour: groupQuota.fiveHour,
+      shortTerm,
       weekly: groupQuota.weekly,
-      hourlyPercent: groupQuota.fiveHour.usedPercent,
+      hourlyPercent: shortTerm.usedPercent,
       weeklyPercent: groupQuota.weekly.usedPercent,
-      resetsInSeconds: groupQuota.fiveHour.resetsInSeconds,
+      resetsInSeconds: shortTerm.resetsInSeconds,
     };
-  }
-
-  // 6. Transcript analysis (Tail chunk scanner)
-  const transcriptPath = resolveTranscriptPath(
-    payload.transcript_path,
-    payload.app_data_dir,
-    payload.conversation_id
-  );
-
-  let recentTools: HUDState['recentTools'] = [];
-  let activeSubagents: HUDState['activeSubagents'] = [];
-  let todoProgress: HUDState['todoProgress'] | undefined;
-
-  if (transcriptPath) {
-    const tailBytes = config.advanced?.transcriptTailBytes || 64 * 1024;
-    const timeoutMs = config.advanced?.transcriptTimeoutMs || 15;
-    const result = scanTranscriptTail(transcriptPath, tailBytes, timeoutMs);
-    recentTools = result.recentTools;
-    activeSubagents = result.activeSubagents;
-    todoProgress = result.todoProgress;
   }
 
   // 7. Session duration
