@@ -5,16 +5,66 @@ import { renderHUD } from './renderers/layout.js';
 import { runSetup } from './tui/setup.js';
 import { runConfigure } from './tui/configure.js';
 import { runDoctor } from './tui/doctor.js';
+import { runUninstall } from './tui/uninstall.js';
+import { runMenu } from './tui/menu.js';
 import { renderPreview } from './tui/preview.js';
+import { colors, style } from './formatters/ansi.js';
 
 const VERSION = '1.0.0';
 
+function printHelp(): void {
+  console.log(`
+${style('agy-hud', colors.bold, colors.brightCyan)} - Real-Time HUD Statusline for Google Antigravity CLI
+
+${style('Usage:', colors.bold)}
+  npx agy-hud                Run interactive setup & management menu
+  npx agy-hud setup          One-click install and enable HUD statusline
+  npx agy-hud configure      Interactive visual configuration wizard
+  npx agy-hud doctor         Check environment, transcripts, and statusline health
+  npx agy-hud preview        Preview current HUD layout and colors
+  npx agy-hud update-quota   Update cached quota limits from Antigravity /usage
+  npx agy-hud quota          Display cached quota information
+  npx agy-hud uninstall      Remove agy-hud plugin and disable statusline
+  npx agy-hud --version      Show current version
+  npx agy-hud --help         Show this help message
+
+${style('Documentation:', colors.bold)}
+  https://github.com/AllenMuu/agy-hud
+`);
+}
+
+async function runStatusline(): Promise<void> {
+  try {
+    const rawStdin = await readStdin(100);
+    const payload = parseStdinPayload(rawStdin);
+    const config = loadConfig(payload.workspace?.root_path);
+    const state = aggregateState(payload, config);
+    const output = renderHUD(state, config);
+    if (output) {
+      process.stdout.write(output + '\n');
+    }
+  } catch {
+    // Fail silently in statusline mode so we never crash the host CLI
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
-  const command = args[0] || 'statusline';
+  const command = args[0];
+
+  if (!command) {
+    if (process.stdin.isTTY) {
+      await runMenu();
+    } else {
+      await runStatusline();
+    }
+    return;
+  }
 
   switch (command) {
     case 'setup':
+    case 'install':
+    case 'init':
       await runSetup();
       break;
 
@@ -27,11 +77,22 @@ async function main() {
       await runDoctor();
       break;
 
+    case 'uninstall':
+    case 'remove':
+      await runUninstall();
+      break;
+
     case 'preview': {
       const config = loadConfig();
       console.log(renderPreview(config));
       break;
     }
+
+    case 'help':
+    case '--help':
+    case '-h':
+      printHelp();
+      break;
 
     case 'version':
     case '-v':
@@ -85,19 +146,7 @@ async function main() {
 
     case 'statusline':
     default: {
-      // Main statusline runner
-      try {
-        const rawStdin = await readStdin(100);
-        const payload = parseStdinPayload(rawStdin);
-        const config = loadConfig(payload.workspace?.root_path);
-        const state = aggregateState(payload, config);
-        const output = renderHUD(state, config);
-        if (output) {
-          process.stdout.write(output + '\n');
-        }
-      } catch (err) {
-        // Fail silently in statusline mode so we never crash the host CLI
-      }
+      await runStatusline();
       break;
     }
   }

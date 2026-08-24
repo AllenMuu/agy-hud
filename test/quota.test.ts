@@ -96,7 +96,7 @@ CLAUDE AND GPT MODELS
       modelGroup: 'gemini' as const,
       workspaceName: 'agy-hud',
       workspacePath: process.cwd(),
-      vcs: { type: 'none' as const, isDirty: false, ahead: 0, behind: 0, untracked: 0, modified: 0, staged: 0 },
+      vcs: { type: 'none' as const, branch: '', isDirty: false, ahead: 0, behind: 0, untracked: 0, modified: 0, staged: 0 },
       contextTokens: { used: 1000, limit: 1000000, percent: 1 },
       quota: {
         group: 'gemini' as const,

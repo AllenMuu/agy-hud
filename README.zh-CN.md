@@ -29,32 +29,49 @@
 
 ## 🚀 快速上手
 
-### 1. 安装
+### 1. 一键安装 (推荐)
 
-下载最新版本归档包并安装：
+无需手动下载压缩包或配置，在终端直接执行：
+
+```bash
+npx agy-hud
+```
+> 或执行 `npx agy-hud setup`。安装程序会自动部署插件文件、初始化配置文件并为 Antigravity CLI 注册 HUD 状态行。
+
+如果你更喜欢全局安装：
+```bash
+npm install -g agy-hud
+agy-hud setup
+```
+
+### 2. 生效与使用
+
+- 如果你的 Antigravity CLI 尚未启动，直接运行 `agy` 即可看到全新的 HUD 状态行。
+- 若 Antigravity 已在运行中，可在会话内运行以下命令立即刷新：
+```text
+/statusline ~/.gemini/config/plugins/agy-hud/hooks/status-line.sh
+```
+
+### 3. 自定义配置
+
+随时调整预设模式、语言与展示组件：
+
+```bash
+npx agy-hud configure
+# 或在 Antigravity 会话内直接运行：
+agy agy-hud:configure
+```
+
+---
+
+### 📦 备选：手动归档包安装
+
+若不使用 npm / npx，也可以通过 Release 压缩包手动安装：
 
 ```sh
 curl -fsSL -o agy-hud.tar.gz https://github.com/AllenMuu/agy-hud/releases/latest/download/agy-hud.tar.gz
 mkdir -p agy-hud && tar -xzf agy-hud.tar.gz -C agy-hud
 agy plugin install ./agy-hud
-```
-
-### 2. 启用状态行
-
-在 Antigravity CLI 中执行以下斜杠命令开启 HUD：
-
-```text
-/statusline ~/.gemini/config/plugins/agy-hud/hooks/status-line.sh
-```
-
-### 3. 交互式自定义配置
-
-随时运行交互式配置命令调整预设与功能开关：
-
-```bash
-agy agy-hud:configure
-# 或在终端直接运行：
-node ~/.gemini/config/plugins/agy-hud/dist/agy-hud.js configure
 ```
 
 ---
@@ -69,12 +86,39 @@ node ~/.gemini/config/plugins/agy-hud/dist/agy-hud.js configure
 
 ---
 
-## 🩺 健康诊断
+## 🩺 健康诊断与环境自检
 
-自检当前 Node.js 环境、日志延迟及配置状态：
+自检当前 Node.js 环境、插件文件部署、Antigravity 状态行注册及日志读取延迟：
 
 ```bash
-node ~/.gemini/config/plugins/agy-hud/dist/agy-hud.js doctor
+npx agy-hud doctor
+# 或在 Antigravity 会话内直接运行：
+agy agy-hud:doctor
+```
+
+---
+
+## ⌨️ CLI 常用指令速查
+
+| 指令 | 说明 |
+|---|---|
+| `npx agy-hud` | 打开交互式终端管理面板（包含安装、配置、诊断、预览及卸载） |
+| `npx agy-hud setup` | 极速一键安装插件并自动注册 `statusLine` 到 Antigravity `settings.json` |
+| `npx agy-hud configure` | 交互式配置向导（切换 Full/Essential/Minimal 预设、语言及组件开关） |
+| `npx agy-hud doctor` | 运行系统环境、插件部署与状态行健康自检 |
+| `npx agy-hud preview` | 在终端实时预览当前配置的 HUD 样式 |
+| `npx agy-hud update-quota` | 同步模型限额缓存（支持管道输入或直接粘贴 `/usage` 输出文本） |
+| `npx agy-hud quota` | 查看当前缓存的模型限额与重置倒计时 |
+| `npx agy-hud uninstall` | 干净卸载插件并从 `settings.json` 注销状态行 |
+
+---
+
+## 📊 同步模型用量与限额 (Quota)
+
+在 Antigravity CLI 中执行 `/usage` 命令后，将输出文本同步给 `agy-hud` 即可实时显示 5 小时与周限额进度条：
+
+```bash
+npx agy-hud update-quota "<粘贴 /usage 输出文本>"
 ```
 
 ---
