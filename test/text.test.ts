@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { stringWidth, truncate, formatTokens, formatDuration, formatResetTime } from '../src/formatters/text.js';
+import {
+  stringWidth,
+  truncate,
+  formatTokens,
+  formatDuration,
+  formatResetTime,
+  parseDurationToMs,
+  formatRemainingMs,
+} from '../src/formatters/text.js';
 
 describe('text formatters', () => {
   it('should compute string width accurately for ASCII and CJK', () => {
@@ -24,6 +32,23 @@ describe('text formatters', () => {
     expect(formatDuration(45000)).toBe('45s');
     expect(formatDuration(90000)).toBe('1m 30s');
     expect(formatDuration(0)).toBe('0s');
+  });
+
+  it('should parse various duration strings into milliseconds accurately', () => {
+    expect(parseDurationToMs('2h 15m')).toBe((2 * 3600 + 15 * 60) * 1000);
+    expect(parseDurationToMs('165h 15m')).toBe((165 * 3600 + 15 * 60) * 1000);
+    expect(parseDurationToMs('6d 21h')).toBe((6 * 86400 + 21 * 3600) * 1000);
+    expect(parseDurationToMs('45m')).toBe(45 * 60 * 1000);
+    expect(parseDurationToMs('30s')).toBe(30 * 1000);
+    expect(parseDurationToMs('3小时15分')).toBe((3 * 3600 + 15 * 60) * 1000);
+    expect(parseDurationToMs('6天21小时')).toBe((6 * 86400 + 21 * 3600) * 1000);
+  });
+
+  it('should format remaining milliseconds into human readable reset time', () => {
+    expect(formatRemainingMs(45 * 60 * 1000, 'en')).toBe('45m');
+    expect(formatRemainingMs((2 * 3600 + 15 * 60) * 1000, 'en')).toBe('2h 15m');
+    expect(formatRemainingMs((6 * 86400 + 21 * 3600) * 1000, 'zh-Hans')).toBe('6天21h');
+    expect(formatRemainingMs(0, 'en')).toBe('');
   });
 
   it('should format reset time into days and hours', () => {

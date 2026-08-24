@@ -12,6 +12,8 @@ export interface HUDTranslations {
   dirty: string;
   time: string;
   fiveHour: string;
+  sixHour: string;
+  shortTerm: string;
   weekly: string;
   geminiGroup: string;
   claudeGroup: string;
@@ -30,6 +32,8 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     dirty: 'dirty',
     time: 'Time',
     fiveHour: '5h',
+    sixHour: '6h',
+    shortTerm: '5h',
     weekly: 'Wk',
     geminiGroup: 'Gemini',
     claudeGroup: 'Claude/GPT',
@@ -46,6 +50,8 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     dirty: '已修改',
     time: '耗时',
     fiveHour: '5h',
+    sixHour: '6h',
+    shortTerm: '5h',
     weekly: '周',
     geminiGroup: 'Gemini',
     claudeGroup: 'Claude/GPT',
@@ -62,6 +68,8 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     dirty: '已修改',
     time: '耗时',
     fiveHour: '5h',
+    sixHour: '6h',
+    shortTerm: '5h',
     weekly: '周',
     geminiGroup: 'Gemini',
     claudeGroup: 'Claude/GPT',
@@ -78,6 +86,8 @@ const DICTIONARY: Record<HUDLanguage, HUDTranslations> = {
     dirty: '已修改',
     time: '耗時',
     fiveHour: '5h',
+    sixHour: '6h',
+    shortTerm: '5h',
     weekly: '周',
     geminiGroup: 'Gemini',
     claudeGroup: 'Claude/GPT',

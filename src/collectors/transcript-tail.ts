@@ -248,13 +248,18 @@ export function scanTranscriptTail(
         step.content &&
         !step.content.includes('truncated') &&
         (step.content.includes('Limit Remaining') ||
+          step.content.includes('Models & Quota') ||
           step.content.includes('GEMINI MODELS') ||
-          step.content.includes('CLAUDE AND GPT MODELS'))
+          step.content.includes('CLAUDE AND GPT MODELS') ||
+          step.content.includes('限额') ||
+          step.content.includes('配额'))
       ) {
-        const parsed = parseUsageText(step.content);
+        const stepTime = step.created_at ? new Date(step.created_at).getTime() : Date.now();
+        const baseTimestamp = isNaN(stepTime) ? Date.now() : stepTime;
+        const parsed = parseUsageText(step.content, baseTimestamp);
         if (
-          (parsed.gemini && parsed.gemini.fiveHour.resetsIn) ||
-          (parsed.claudeGpt && parsed.claudeGpt.fiveHour.resetsIn)
+          (parsed.gemini && (parsed.gemini.fiveHour.resetsIn || parsed.gemini.fiveHour.remainingPercent !== undefined)) ||
+          (parsed.claudeGpt && (parsed.claudeGpt.fiveHour.resetsIn || parsed.claudeGpt.fiveHour.remainingPercent !== undefined))
         ) {
           saveQuotaCache(parsed);
         }

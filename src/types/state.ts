@@ -8,11 +8,15 @@ export interface QuotaLimitItem {
   usedPercent: number;
   resetsIn?: string;
   resetsInSeconds?: number;
+  resetTimestamp?: number;
+  windowHours?: number;
+  label?: string;
 }
 
 export interface ModelGroupQuotaState {
   group: ModelQuotaGroup;
   fiveHour?: QuotaLimitItem;
+  shortTerm?: QuotaLimitItem;
   weekly?: QuotaLimitItem;
   // Legacy backward compatibility
   hourlyPercent: number;

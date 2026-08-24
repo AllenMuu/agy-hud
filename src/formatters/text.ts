@@ -89,42 +89,99 @@ export function formatDuration(ms?: number): string {
 }
 
 /**
- * Formats quota reset time string (e.g. "165h 15m" -> "6天21h" / "6d 21h", "2h 15m" -> "2h 15m").
+ * Parses duration strings like "2h 15m", "165h 15m", "6d 21h", "45m", "30s", "2小时15分" into milliseconds.
  */
-export function formatResetTime(resetsIn?: string, lang = 'en'): string {
-  if (!resetsIn || !resetsIn.trim()) return '';
+export function parseDurationToMs(durationStr?: string): number {
+  if (!durationStr || !durationStr.trim()) return 0;
+  const str = durationStr.trim().toLowerCase();
 
-  const clean = resetsIn.trim();
-  const isZh = lang.startsWith('zh');
+  let totalMs = 0;
 
-  // If it already has days like "6d 21h" or "6天21h"
-  if (clean.includes('d') || clean.includes('天') || clean.includes('day')) {
-    return clean;
+  // Days: e.g. "6d", "6天", "6 days"
+  const dayMatch = str.match(/(\d+)\s*(?:d|day|days|天)/i);
+  if (dayMatch) {
+    totalMs += parseInt(dayMatch[1], 10) * 86400 * 1000;
   }
 
-  // Parse hours and minutes
-  const hMatch = clean.match(/(\d+)\s*h/i);
-  const mMatch = clean.match(/(\d+)\s*m/i);
+  // Hours: e.g. "2h", "2 hours", "2小时", "2时"
+  const hourMatch = str.match(/(\d+)\s*(?:h|hr|hrs|hour|hours|小时|时)/i);
+  if (hourMatch) {
+    totalMs += parseInt(hourMatch[1], 10) * 3600 * 1000;
+  }
 
-  if (hMatch) {
-    const totalHours = parseInt(hMatch[1], 10);
-    const mins = mMatch ? parseInt(mMatch[1], 10) : 0;
+  // Minutes: e.g. "15m", "15 mins", "15分", "15分钟"
+  const minMatch = str.match(/(\d+)\s*(?:m|min|mins|minute|minutes|分|分钟)(?![a-zA-Z])/i);
+  if (minMatch) {
+    totalMs += parseInt(minMatch[1], 10) * 60 * 1000;
+  }
 
-    if (totalHours >= 24) {
-      const days = Math.floor(totalHours / 24);
-      const remHours = totalHours % 24;
+  // Seconds: e.g. "30s", "30 secs", "30秒"
+  const secMatch = str.match(/(\d+)\s*(?:s|sec|secs|second|seconds|秒)/i);
+  if (secMatch) {
+    totalMs += parseInt(secMatch[1], 10) * 1000;
+  }
 
-      if (isZh) {
-        return remHours > 0 ? `${days}天${remHours}h` : `${days}天`;
-      } else {
-        return remHours > 0 ? `${days}d ${remHours}h` : `${days}d`;
-      }
-    } else {
-      if (mins > 0) {
-        return `${totalHours}h ${mins}m`;
-      }
-      return `${totalHours}h`;
-    }
+  // Plain number of seconds fallback
+  if (totalMs === 0 && /^\d+$/.test(str)) {
+    totalMs = parseInt(str, 10) * 1000;
+  }
+
+  return totalMs;
+}
+
+/**
+ * Formats milliseconds remaining into a concise human-readable reset string.
+ */
+export function formatRemainingMs(remainingMs: number, lang = 'en'): string {
+  if (remainingMs <= 0) return '';
+  const isZh = lang.startsWith('zh');
+
+  const totalSecs = Math.ceil(remainingMs / 1000);
+  if (totalSecs < 60) {
+    return isZh ? `${totalSecs}秒` : `${totalSecs}s`;
+  }
+
+  const totalMins = Math.ceil(remainingMs / (60 * 1000));
+  if (totalMins < 60) {
+    return `${totalMins}m`;
+  }
+
+  const totalHours = Math.floor(totalMins / 60);
+  const remMins = totalMins % 60;
+
+  if (totalHours < 24) {
+    return remMins > 0 ? `${totalHours}h ${remMins}m` : `${totalHours}h`;
+  }
+
+  const days = Math.floor(totalHours / 24);
+  const remHours = totalHours % 24;
+
+  if (isZh) {
+    return remHours > 0 ? `${days}天${remHours}h` : `${days}天`;
+  }
+  return remHours > 0 ? `${days}d ${remHours}h` : `${days}d`;
+}
+
+/**
+ * Formats quota reset time string, dynamically computing remaining time if resetTimestamp is provided.
+ */
+export function formatResetTime(
+  resetsIn?: string,
+  lang = 'en',
+  resetTimestamp?: number,
+  now = Date.now()
+): string {
+  if (resetTimestamp && resetTimestamp > 0) {
+    const remainingMs = resetTimestamp - now;
+    if (remainingMs <= 0) return '';
+    return formatRemainingMs(remainingMs, lang);
+  }
+
+  if (!resetsIn || !resetsIn.trim()) return '';
+  const clean = resetsIn.trim();
+  const ms = parseDurationToMs(clean);
+  if (ms > 0) {
+    return formatRemainingMs(ms, lang);
   }
 
   return clean;

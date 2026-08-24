@@ -24,6 +24,7 @@ export interface DisplayConfig {
   showTodos: boolean;
   showQuota: boolean;
   showFiveHourQuota?: boolean;
+  showShortTermQuota?: boolean;
   showWeeklyQuota?: boolean;
   quotaDisplayMode?: 'remaining' | 'used'; // 'remaining' (default) shows % remaining, 'used' shows % used
   showDuration: boolean;

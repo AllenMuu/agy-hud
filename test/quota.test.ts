@@ -151,4 +151,97 @@ CLAUDE AND GPT MODELS
     expect(outputClaude).toContain('73%rem.');
     expect(outputClaude).toContain('(6d 22h)');
   });
+  it('parses 6-hour limit format and displays 6h in HUD', () => {
+    const sixHourUsageOutput = `
+GEMINI MODELS
+  Weekly Limit Remaining
+    [████████████████████████████████████████████████░░] 90.0%
+    90% remaining · Refreshes in 100h
+
+  Six Hour Limit Remaining
+    [████████████████████████████░░░░░░░░░░░░░░░░░░░░░░] 55.0%
+    55% remaining · Refreshes in 4h 30m
+`;
+    const parsed = parseUsageText(sixHourUsageOutput);
+    expect(parsed.gemini).toBeDefined();
+    expect(parsed.gemini?.fiveHour.windowHours).toBe(6);
+    expect(parsed.gemini?.fiveHour.label).toBe('6h');
+    expect(parsed.gemini?.fiveHour.remainingPercent).toBe(55);
+    expect(parsed.gemini?.fiveHour.resetsIn).toBe('4h 30m');
+
+    const groupQuota = getQuotaForModelGroup('gemini', parsed)!;
+    expect(groupQuota.shortTerm.label).toBe('6h');
+
+    const state = {
+      modelName: 'Gemini 2.5 Pro',
+      modelGroup: 'gemini' as const,
+      workspaceName: 'agy-hud',
+      workspacePath: process.cwd(),
+      vcs: { type: 'none' as const, branch: '', isDirty: false, ahead: 0, behind: 0, untracked: 0, modified: 0, staged: 0 },
+      contextTokens: { used: 1000, limit: 1000000, percent: 1 },
+      quota: {
+        group: 'gemini' as const,
+        fiveHour: groupQuota.fiveHour,
+        shortTerm: groupQuota.shortTerm,
+        weekly: groupQuota.weekly,
+        hourlyPercent: groupQuota.shortTerm.usedPercent,
+        weeklyPercent: groupQuota.weekly.usedPercent,
+      },
+      recentTools: [],
+      activeSubagents: [],
+    };
+
+    const hudOutput = stripAnsi(renderHUD(state, DEFAULT_CONFIG));
+    expect(hudOutput).toContain('6h');
+    expect(hudOutput).toContain('55%rem.');
+    expect(hudOutput).toContain('(4h 30m)');
+  });
+
+  it('dynamically counts down remaining time and auto-resets when window expires', () => {
+    const baseTime = 1700000000000;
+    const parsed = parseUsageText(sampleUsageOutput, baseTime);
+
+    // 1. Immediately at baseTime
+    const initialQuota = getQuotaForModelGroup('gemini', parsed, baseTime)!;
+    expect(initialQuota.fiveHour.remainingPercent).toBe(76.75);
+    expect(initialQuota.fiveHour.resetsIn).toBe('2h 15m');
+
+    // 2. 1 hour later (baseTime + 1 hour) -> resetsIn should be 1h 15m
+    const oneHourLater = baseTime + 3600 * 1000;
+    const quota1h = getQuotaForModelGroup('gemini', parsed, oneHourLater)!;
+    expect(quota1h.fiveHour.remainingPercent).toBe(76.75);
+    expect(quota1h.fiveHour.resetsIn).toBe('1h 15m');
+
+    // 3. 2 hours later (baseTime + 2 hours) -> resetsIn should be 15m
+    const twoHoursLater = baseTime + 2 * 3600 * 1000;
+    const quota2h = getQuotaForModelGroup('gemini', parsed, twoHoursLater)!;
+    expect(quota2h.fiveHour.remainingPercent).toBe(76.75);
+    expect(quota2h.fiveHour.resetsIn).toBe('15m');
+
+    // 4. 2 hours 16 mins later -> window expired! Should auto-reset to 100% and clear resetsIn
+    const expiredTime = baseTime + (2 * 3600 + 16 * 60) * 1000;
+    const expiredQuota = getQuotaForModelGroup('gemini', parsed, expiredTime)!;
+    expect(expiredQuota.fiveHour.remainingPercent).toBe(100);
+    expect(expiredQuota.fiveHour.usedPercent).toBe(0);
+    expect(expiredQuota.fiveHour.resetsIn).toBeUndefined();
+  });
+
+  it('parses Chinese quota format correctly', () => {
+    const zhUsageOutput = `
+GEMINI MODELS
+  周限额
+    [████████████████████████████████████████████████░░] 95.0%
+    剩余 95% · 将在 160h 后重置
+
+  6小时限额
+    [██████████████████████████████████████░░░░░░░░░░░░] 80.0%
+    剩余 80% · 将在 3小时15分 后刷新
+`;
+    const parsed = parseUsageText(zhUsageOutput);
+    expect(parsed.gemini).toBeDefined();
+    expect(parsed.gemini?.fiveHour.windowHours).toBe(6);
+    expect(parsed.gemini?.fiveHour.label).toBe('6h');
+    expect(parsed.gemini?.fiveHour.remainingPercent).toBe(80);
+    expect(parsed.gemini?.fiveHour.resetsIn).toBe('3小时15分');
+  });
 });
