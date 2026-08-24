@@ -28,33 +28,50 @@ It provides instant situational awareness directly inside your terminal, showing
 ---
 
 ## 🚀 Quick Start
+ 
+### 1. One-Click Installation (Recommended)
 
-### 1. Installation
+No need to manually download archives or edit config files. Simply run:
 
-Download and install the release archive:
+```bash
+npx agy-hud
+```
+> Or run `npx agy-hud setup`. The installer deploys the plugin bundle, creates default configs, and automatically registers the statusLine in Antigravity CLI settings.
 
-```sh
-curl -fsSL -o agy-hud.tar.gz https://github.com/AllenMuu/agy-hud/releases/latest/download/agy-hud.tar.gz
-mkdir -p agy-hud && tar -xzf agy-hud.tar.gz -C agy-hud
-agy plugin install ./agy-hud
+If you prefer a global npm install:
+```bash
+npm install -g agy-hud
+agy-hud setup
 ```
 
-### 2. Enable StatusLine
+### 2. Activation
 
-Enable the HUD inside Antigravity CLI by running:
-
+- If Antigravity CLI is not yet running, simply start `agy` to enjoy the real-time HUD!
+- If Antigravity CLI is already open, run this slash command to activate immediately:
 ```text
 /statusline ~/.gemini/config/plugins/agy-hud/hooks/status-line.sh
 ```
 
 ### 3. Interactive Configuration
 
-To customize presets and feature toggles interactively:
+Customize presets (Full / Essential / Minimal), language, and feature toggles anytime:
 
 ```bash
+npx agy-hud configure
+# or from inside Antigravity CLI:
 agy agy-hud:configure
-# or from terminal
-node ~/.gemini/config/plugins/agy-hud/dist/agy-hud.js configure
+```
+
+---
+
+### 📦 Alternative: Manual Archive Install
+
+If not using npm/npx, you can download the release archive:
+
+```sh
+curl -fsSL -o agy-hud.tar.gz https://github.com/AllenMuu/agy-hud/releases/latest/download/agy-hud.tar.gz
+mkdir -p agy-hud && tar -xzf agy-hud.tar.gz -C agy-hud
+agy plugin install ./agy-hud
 ```
 
 ---
@@ -69,12 +86,39 @@ node ~/.gemini/config/plugins/agy-hud/dist/agy-hud.js configure
 
 ---
 
-## 🩺 Diagnostics
+## 🩺 Diagnostics & Health Check
 
-To verify system environment, transcript latency, and statusline health:
+To verify Node.js version, plugin deployment, Antigravity settings registration, and transcript tail scan latency:
 
 ```bash
-node ~/.gemini/config/plugins/agy-hud/dist/agy-hud.js doctor
+npx agy-hud doctor
+# or inside Antigravity CLI:
+agy agy-hud:doctor
+```
+
+---
+
+## ⌨️ CLI Commands Cheatsheet
+
+| Command | Description |
+|---|---|
+| `npx agy-hud` | Launch interactive terminal management menu |
+| `npx agy-hud setup` | One-click install and register statusline in `settings.json` |
+| `npx agy-hud configure` | Visual configurator for presets, language, and components |
+| `npx agy-hud doctor` | Run environment and statusline health diagnostics |
+| `npx agy-hud preview` | Render live preview of HUD statusline in terminal |
+| `npx agy-hud update-quota` | Update quota cache from `/usage` output text |
+| `npx agy-hud quota` | Inspect current cached multi-model rate limits |
+| `npx agy-hud uninstall` | Cleanly remove plugin and deregister statusline |
+
+---
+
+## 📊 Multi-Model Quota Synchronization
+
+When you run `/usage` inside Antigravity CLI, pipe or paste the output into `agy-hud` to enable real-time 5-hour & weekly rate limit progress meters:
+
+```bash
+npx agy-hud update-quota "<paste /usage output text>"
 ```
 
 ---

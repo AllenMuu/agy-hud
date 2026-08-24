@@ -7,12 +7,21 @@
     "agy-hud": "./dist/agy-hud.js"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "hooks",
+    "plugin.json",
+    "config.example.json",
+    "README.md",
+    "README.zh-CN.md"
+  ],
   "scripts": {
     "build": "node esbuild.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build && node scripts/package.mjs"
+    "package": "npm run build && node scripts/package.mjs",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "antigravity",
@@ -20,7 +29,8 @@
     "statusline",
     "hud",
     "plugin",
-    "tui"
+    "tui",
+    "npx"
   ],
   "author": "Allen Muu",
   "license": "MIT",

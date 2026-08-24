@@ -1,7 +1,12 @@
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
-import { loadConfig, getGlobalConfigPath } from '../config/loader.js';
+import {
+  loadConfig,
+  getGlobalConfigPath,
+  getGlobalPluginDir,
+  getAntigravitySettingsPath,
+} from '../config/loader.js';
 import { colors, style } from '../formatters/ansi.js';
 import { scanTranscriptTail, resolveTranscriptPath } from '../collectors/transcript-tail.js';
 
@@ -28,7 +33,38 @@ export async function runDoctor(): Promise<void> {
     console.log(`${style('⚠', colors.brightYellow)} Configuration file not initialized yet (will use defaults)`);
   }
 
-  // 3. Antigravity Brain / Transcript Path Check
+  // 3. Plugin Files Check
+  const pluginDir = getGlobalPluginDir();
+  const hookScript = path.join(pluginDir, 'hooks', 'status-line.sh');
+  const bundleScript = path.join(pluginDir, 'dist', 'agy-hud.js');
+  if (fs.existsSync(hookScript) && fs.existsSync(bundleScript)) {
+    console.log(`${style('✓', colors.brightGreen)} Plugin files installed: ${pluginDir}`);
+  } else {
+    console.log(`${style('⚠', colors.brightYellow)} Plugin files not fully deployed (run \`npx agy-hud setup\` to install)`);
+  }
+
+  // 4. Antigravity Settings Check
+  const settingsPath = getAntigravitySettingsPath();
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const content = fs.readFileSync(settingsPath, 'utf-8');
+      const settings = JSON.parse(content);
+      if (settings.statusLine && (
+        (typeof settings.statusLine === 'string' && settings.statusLine.includes('agy-hud')) ||
+        (typeof settings.statusLine.command === 'string' && settings.statusLine.command.includes('agy-hud'))
+      )) {
+        console.log(`${style('✓', colors.brightGreen)} Antigravity settings: statusLine registered (${settingsPath})`);
+      } else {
+        console.log(`${style('⚠', colors.brightYellow)} Antigravity settings: statusLine not registered yet in ${settingsPath}`);
+      }
+    } catch {
+      console.log(`${style('⚠', colors.brightYellow)} Could not parse ${settingsPath}`);
+    }
+  } else {
+    console.log(`${style('ℹ', colors.cyan)} Antigravity settings file not found yet (${settingsPath})`);
+  }
+
+  // 5. Antigravity Brain / Transcript Path Check
   const baseDir = path.join(os.homedir(), '.gemini', 'antigravity-cli');
   const transcript = resolveTranscriptPath(undefined, baseDir);
   if (transcript) {
@@ -44,7 +80,7 @@ export async function runDoctor(): Promise<void> {
     console.log(`${style('ℹ', colors.cyan)} No active session transcript found (will activate during agent turns)`);
   }
 
-  // 4. Git Detection
+  // 6. Git Detection
   const gitDir = path.join(process.cwd(), '.git');
   if (fs.existsSync(gitDir)) {
     console.log(`${style('✓', colors.brightGreen)} Git repository detected in current workspace`);
