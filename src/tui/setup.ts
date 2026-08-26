@@ -59,7 +59,7 @@ export async function runSetup(): Promise<void> {
   console.log(` • If Antigravity is already running, run slash command:`);
   console.log(style(`     /statusline ${hookScript}`, colors.brightYellow));
   console.log(` • To customize your HUD (preset, components, language):`);
-  console.log(style(`     npx agy-hud configure`, colors.brightCyan));
+  console.log(style(`     npx @allenmuu/agy-hud configure`, colors.brightCyan));
   console.log(` • To check diagnostics & health:`);
-  console.log(style(`     npx agy-hud doctor\n`, colors.brightCyan));
+  console.log(style(`     npx @allenmuu/agy-hud doctor\n`, colors.brightCyan));
 }

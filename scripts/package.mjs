@@ -19,6 +19,8 @@ const filesToCopy = [
   'plugin.json',
   'config.example.json',
   'README.md',
+  'README.zh-CN.md',
+  'LICENSE',
   'package.json',
 ];
 

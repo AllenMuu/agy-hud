@@ -10,23 +10,25 @@ import { runMenu } from './tui/menu.js';
 import { renderPreview } from './tui/preview.js';
 import { colors, style } from './formatters/ansi.js';
 
-const VERSION = '1.0.0';
+declare const __CLI_VERSION__: string | undefined;
+const VERSION = typeof __CLI_VERSION__ !== 'undefined' ? __CLI_VERSION__ : '1.0.0';
 
 function printHelp(): void {
   console.log(`
 ${style('agy-hud', colors.bold, colors.brightCyan)} - Real-Time HUD Statusline for Google Antigravity CLI
 
 ${style('Usage:', colors.bold)}
-  npx agy-hud                Run interactive setup & management menu
-  npx agy-hud setup          One-click install and enable HUD statusline
-  npx agy-hud configure      Interactive visual configuration wizard
-  npx agy-hud doctor         Check environment, transcripts, and statusline health
-  npx agy-hud preview        Preview current HUD layout and colors
-  npx agy-hud update-quota   Update cached quota limits from Antigravity /usage
-  npx agy-hud quota          Display cached quota information
-  npx agy-hud uninstall      Remove agy-hud plugin and disable statusline
-  npx agy-hud --version      Show current version
-  npx agy-hud --help         Show this help message
+  npx @allenmuu/agy-hud                Run interactive setup & management menu
+  npx @allenmuu/agy-hud install        One-click install and enable HUD statusline
+  npx @allenmuu/agy-hud setup          One-click install and enable HUD statusline
+  npx @allenmuu/agy-hud configure      Interactive visual configuration wizard
+  npx @allenmuu/agy-hud doctor         Check environment, transcripts, and statusline health
+  npx @allenmuu/agy-hud preview        Preview current HUD layout and colors
+  npx @allenmuu/agy-hud update-quota   Update cached quota limits from Antigravity /usage
+  npx @allenmuu/agy-hud quota          Display cached quota information
+  npx @allenmuu/agy-hud uninstall      Remove agy-hud plugin and disable statusline
+  npx @allenmuu/agy-hud --version      Show current version
+  npx @allenmuu/agy-hud --help         Show this help message
 
 ${style('Documentation:', colors.bold)}
   https://github.com/AllenMuu/agy-hud

@@ -1,5 +1,9 @@
 # agy-hud: Google Antigravity CLI 实时终端 HUD 状态行插件
 
+[![npm version](https://img.shields.io/npm/v/@allenmuu/agy-hud.svg?style=flat-square)](https://www.npmjs.com/package/@allenmuu/agy-hud)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org)
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 `agy-hud` 是专为 Google Antigravity (`agy`) CLI 打造的高性能、实时 Heads-Up Display (HUD) 状态行插件。
@@ -34,13 +38,13 @@
 无需手动下载压缩包或配置，在终端直接执行：
 
 ```bash
-npx agy-hud
+npx @allenmuu/agy-hud install
 ```
-> 或执行 `npx agy-hud setup`。安装程序会自动部署插件文件、初始化配置文件并为 Antigravity CLI 注册 HUD 状态行。
+> 或执行 `npx @allenmuu/agy-hud`。安装程序会自动部署插件文件、初始化配置文件并为 Antigravity CLI 注册 HUD 状态行。
 
 如果你更喜欢全局安装：
 ```bash
-npm install -g agy-hud
+npm install -g @allenmuu/agy-hud
 agy-hud setup
 ```
 
@@ -57,7 +61,7 @@ agy-hud setup
 随时调整预设模式、语言与展示组件：
 
 ```bash
-npx agy-hud configure
+npx @allenmuu/agy-hud configure
 # 或在 Antigravity 会话内直接运行：
 agy agy-hud:configure
 ```
@@ -91,7 +95,7 @@ agy plugin install ./agy-hud
 自检当前 Node.js 环境、插件文件部署、Antigravity 状态行注册及日志读取延迟：
 
 ```bash
-npx agy-hud doctor
+npx @allenmuu/agy-hud doctor
 # 或在 Antigravity 会话内直接运行：
 agy agy-hud:doctor
 ```
@@ -102,14 +106,14 @@ agy agy-hud:doctor
 
 | 指令 | 说明 |
 |---|---|
-| `npx agy-hud` | 打开交互式终端管理面板（包含安装、配置、诊断、预览及卸载） |
-| `npx agy-hud setup` | 极速一键安装插件并自动注册 `statusLine` 到 Antigravity `settings.json` |
-| `npx agy-hud configure` | 交互式配置向导（切换 Full/Essential/Minimal 预设、语言及组件开关） |
-| `npx agy-hud doctor` | 运行系统环境、插件部署与状态行健康自检 |
-| `npx agy-hud preview` | 在终端实时预览当前配置的 HUD 样式 |
-| `npx agy-hud update-quota` | 同步模型限额缓存（支持管道输入或直接粘贴 `/usage` 输出文本） |
-| `npx agy-hud quota` | 查看当前缓存的模型限额与重置倒计时 |
-| `npx agy-hud uninstall` | 干净卸载插件并从 `settings.json` 注销状态行 |
+| `npx @allenmuu/agy-hud` | 打开交互式终端管理面板（包含安装、配置、诊断、预览及卸载） |
+| `npx @allenmuu/agy-hud install` | 极速一键安装插件并自动注册 `statusLine` 到 Antigravity `settings.json` |
+| `npx @allenmuu/agy-hud configure` | 交互式配置向导（切换 Full/Essential/Minimal 预设、语言及组件开关） |
+| `npx @allenmuu/agy-hud doctor` | 运行系统环境、插件部署与状态行健康自检 |
+| `npx @allenmuu/agy-hud preview` | 在终端实时预览当前配置的 HUD 样式 |
+| `npx @allenmuu/agy-hud update-quota` | 同步模型限额缓存（支持管道输入或直接粘贴 `/usage` 输出文本） |
+| `npx @allenmuu/agy-hud quota` | 查看当前缓存的模型限额与重置倒计时 |
+| `npx @allenmuu/agy-hud uninstall` | 干净卸载插件并从 `settings.json` 注销状态行 |
 
 ---
 
@@ -118,7 +122,7 @@ agy agy-hud:doctor
 在 Antigravity CLI 中执行 `/usage` 命令后，将输出文本同步给 `agy-hud` 即可实时显示 5 小时与周限额进度条：
 
 ```bash
-npx agy-hud update-quota "<粘贴 /usage 输出文本>"
+npx @allenmuu/agy-hud update-quota "<粘贴 /usage 输出文本>"
 ```
 
 ---
