@@ -1,6 +1,6 @@
 {
   "name": "@allenmuu/agy-hud",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time, high-performance status-line HUD plugin for Google Antigravity CLI",
   "main": "dist/agy-hud.js",
   "bin": {

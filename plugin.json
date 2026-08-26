@@ -1,6 +1,6 @@
 {
   "name": "agy-hud",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time, high-performance status-line HUD plugin for Antigravity CLI",
   "author": "Allen Muu",
   "entry": "dist/agy-hud.js",
