@@ -1,6 +1,8 @@
 import * as esbuild from 'esbuild';
+import fs from 'node:fs';
 
 const isWatch = process.argv.includes('--watch');
+const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 
 const buildOptions = {
   entryPoints: ['src/index.ts'],
@@ -11,6 +13,9 @@ const buildOptions = {
   outfile: 'dist/agy-hud.js',
   banner: {
     js: '#!/usr/bin/env node\n',
+  },
+  define: {
+    '__CLI_VERSION__': JSON.stringify(pkg.version),
   },
   minify: false,
   sourcemap: false,
@@ -24,3 +29,4 @@ if (isWatch) {
   await esbuild.build(buildOptions);
   console.log('Build complete: dist/agy-hud.js');
 }
+

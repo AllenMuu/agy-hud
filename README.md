@@ -1,5 +1,9 @@
 # agy-hud: Real-Time HUD Statusline for Google Antigravity CLI
 
+[![npm version](https://img.shields.io/npm/v/@allenmuu/agy-hud.svg?style=flat-square)](https://www.npmjs.com/package/@allenmuu/agy-hud)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org)
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 `agy-hud` is a high-performance, real-time Heads-Up Display (HUD) statusline plugin tailored for Google Antigravity (`agy`) CLI.
@@ -34,13 +38,13 @@ It provides instant situational awareness directly inside your terminal, showing
 No need to manually download archives or edit config files. Simply run:
 
 ```bash
-npx agy-hud
+npx @allenmuu/agy-hud install
 ```
-> Or run `npx agy-hud setup`. The installer deploys the plugin bundle, creates default configs, and automatically registers the statusLine in Antigravity CLI settings.
+> Or run `npx @allenmuu/agy-hud`. The installer deploys the plugin bundle, creates default configs, and automatically registers the statusLine in Antigravity CLI settings.
 
 If you prefer a global npm install:
 ```bash
-npm install -g agy-hud
+npm install -g @allenmuu/agy-hud
 agy-hud setup
 ```
 
@@ -57,7 +61,7 @@ agy-hud setup
 Customize presets (Full / Essential / Minimal), language, and feature toggles anytime:
 
 ```bash
-npx agy-hud configure
+npx @allenmuu/agy-hud configure
 # or from inside Antigravity CLI:
 agy agy-hud:configure
 ```
@@ -91,7 +95,7 @@ agy plugin install ./agy-hud
 To verify Node.js version, plugin deployment, Antigravity settings registration, and transcript tail scan latency:
 
 ```bash
-npx agy-hud doctor
+npx @allenmuu/agy-hud doctor
 # or inside Antigravity CLI:
 agy agy-hud:doctor
 ```
@@ -102,14 +106,14 @@ agy agy-hud:doctor
 
 | Command | Description |
 |---|---|
-| `npx agy-hud` | Launch interactive terminal management menu |
-| `npx agy-hud setup` | One-click install and register statusline in `settings.json` |
-| `npx agy-hud configure` | Visual configurator for presets, language, and components |
-| `npx agy-hud doctor` | Run environment and statusline health diagnostics |
-| `npx agy-hud preview` | Render live preview of HUD statusline in terminal |
-| `npx agy-hud update-quota` | Update quota cache from `/usage` output text |
-| `npx agy-hud quota` | Inspect current cached multi-model rate limits |
-| `npx agy-hud uninstall` | Cleanly remove plugin and deregister statusline |
+| `npx @allenmuu/agy-hud` | Launch interactive terminal management menu |
+| `npx @allenmuu/agy-hud install` | One-click install and register statusline in `settings.json` |
+| `npx @allenmuu/agy-hud configure` | Visual configurator for presets, language, and components |
+| `npx @allenmuu/agy-hud doctor` | Run environment and statusline health diagnostics |
+| `npx @allenmuu/agy-hud preview` | Render live preview of HUD statusline in terminal |
+| `npx @allenmuu/agy-hud update-quota` | Update quota cache from `/usage` output text |
+| `npx @allenmuu/agy-hud quota` | Inspect current cached multi-model rate limits |
+| `npx @allenmuu/agy-hud uninstall` | Cleanly remove plugin and deregister statusline |
 
 ---
 
@@ -118,7 +122,7 @@ agy agy-hud:doctor
 When you run `/usage` inside Antigravity CLI, pipe or paste the output into `agy-hud` to enable real-time 5-hour & weekly rate limit progress meters:
 
 ```bash
-npx agy-hud update-quota "<paste /usage output text>"
+npx @allenmuu/agy-hud update-quota "<paste /usage output text>"
 ```
 
 ---

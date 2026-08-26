@@ -40,7 +40,7 @@ export async function runDoctor(): Promise<void> {
   if (fs.existsSync(hookScript) && fs.existsSync(bundleScript)) {
     console.log(`${style('✓', colors.brightGreen)} Plugin files installed: ${pluginDir}`);
   } else {
-    console.log(`${style('⚠', colors.brightYellow)} Plugin files not fully deployed (run \`npx agy-hud setup\` to install)`);
+    console.log(`${style('⚠', colors.brightYellow)} Plugin files not fully deployed (run \`npx @allenmuu/agy-hud install\` to install)`);
   }
 
   // 4. Antigravity Settings Check
