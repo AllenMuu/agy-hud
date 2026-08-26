@@ -68,6 +68,23 @@ agy agy-hud:configure
 
 ---
 
+### 4. 一键卸载
+ 
+如果需要卸载 `agy-hud` 状态行插件：
+
+```bash
+# 干净卸载（自动注销 statusLine 并移除插件，保留自定义配置）
+npx @allenmuu/agy-hud uninstall
+
+# 彻底清理（同时移除配置与 Quota 缓存目录）
+npx @allenmuu/agy-hud uninstall --purge
+
+# 或在 Antigravity 会话内直接运行：
+agy agy-hud:uninstall
+```
+
+---
+
 ### 📦 备选：手动归档包安装
 
 若不使用 npm / npx，也可以通过 Release 压缩包手动安装：
@@ -113,7 +130,7 @@ agy agy-hud:doctor
 | `npx @allenmuu/agy-hud preview` | 在终端实时预览当前配置的 HUD 样式 |
 | `npx @allenmuu/agy-hud update-quota` | 同步模型限额缓存（支持管道输入或直接粘贴 `/usage` 输出文本） |
 | `npx @allenmuu/agy-hud quota` | 查看当前缓存的模型限额与重置倒计时 |
-| `npx @allenmuu/agy-hud uninstall` | 干净卸载插件并从 `settings.json` 注销状态行 |
+| `npx @allenmuu/agy-hud uninstall` | 干净卸载插件并从 `settings.json` 注销状态行（`--purge` 连同配置一并清除） |
 
 ---
 

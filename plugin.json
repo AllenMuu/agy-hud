@@ -19,6 +19,11 @@
       "name": "agy-hud:doctor",
       "description": "Health check and diagnostics for agy-hud",
       "exec": "node dist/agy-hud.js doctor"
+    },
+    {
+      "name": "agy-hud:uninstall",
+      "description": "Uninstall agy-hud and remove statusline configuration",
+      "exec": "node dist/agy-hud.js uninstall"
     }
   ]
 }

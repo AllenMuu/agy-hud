@@ -28,9 +28,9 @@ export function getAntigravitySettingsPath(): string {
   return p1;
 }
 
-export function updateAntigravitySettings(hookCommand: string): boolean {
+export function updateAntigravitySettings(hookCommand: string, customSettingsPath?: string): boolean {
   try {
-    const settingsPath = getAntigravitySettingsPath();
+    const settingsPath = customSettingsPath || getAntigravitySettingsPath();
     const settingsDir = path.dirname(settingsPath);
     if (!fs.existsSync(settingsDir)) {
       fs.mkdirSync(settingsDir, { recursive: true });
@@ -58,21 +58,71 @@ export function updateAntigravitySettings(hookCommand: string): boolean {
   }
 }
 
-export function removeAntigravitySettings(): boolean {
-  try {
-    const settingsPath = getAntigravitySettingsPath();
-    if (fs.existsSync(settingsPath)) {
-      const content = fs.readFileSync(settingsPath, 'utf-8');
-      const settings = JSON.parse(content);
-      if (settings.statusLine && (
-        (typeof settings.statusLine === 'string' && settings.statusLine.includes('agy-hud')) ||
-        (typeof settings.statusLine.command === 'string' && settings.statusLine.command.includes('agy-hud'))
-      )) {
-        delete settings.statusLine;
-        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+export function removeAntigravitySettings(customSettingsPath?: string): { success: boolean; modifiedFiles: string[] } {
+  const home = os.homedir();
+  const candidatePaths = customSettingsPath
+    ? [customSettingsPath]
+    : [
+        path.join(home, '.gemini', 'antigravity-cli', 'settings.json'),
+        path.join(home, '.gemini', 'config', 'settings.json'),
+      ];
+
+  const modifiedFiles: string[] = [];
+
+  for (const settingsPath of candidatePaths) {
+    try {
+      if (fs.existsSync(settingsPath)) {
+        const content = fs.readFileSync(settingsPath, 'utf-8');
+        const settings = JSON.parse(content);
+        let modified = false;
+
+        if (settings.statusLine) {
+          const isAgyHud =
+            (typeof settings.statusLine === 'string' && (settings.statusLine.includes('agy-hud') || settings.statusLine.includes('status-line.sh'))) ||
+            (typeof settings.statusLine === 'object' && settings.statusLine !== null && (
+              (typeof settings.statusLine.command === 'string' && (settings.statusLine.command.includes('agy-hud') || settings.statusLine.command.includes('status-line.sh')))
+            ));
+
+          if (isAgyHud) {
+            delete settings.statusLine;
+            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+            modified = true;
+          }
+        }
+
+        if (modified) {
+          modifiedFiles.push(settingsPath);
+        }
       }
+    } catch {
+      // Continue checking other candidate files
     }
-    return true;
+  }
+
+  return { success: true, modifiedFiles };
+}
+
+export function removeGlobalPluginDir(customDir?: string): boolean {
+  try {
+    const dir = customDir || getGlobalPluginDir();
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export function removeGlobalConfigDir(customDir?: string): boolean {
+  try {
+    const dir = customDir || getGlobalConfigDir();
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -150,7 +200,8 @@ export function deployPluginFiles(targetDir: string): { success: boolean; files:
       commands: [
         { name: 'agy-hud:setup', description: 'Setup and enable agy-hud status line', exec: 'node dist/agy-hud.js setup' },
         { name: 'agy-hud:configure', description: 'Interactive configuration wizard for agy-hud', exec: 'node dist/agy-hud.js configure' },
-        { name: 'agy-hud:doctor', description: 'Health check and diagnostics for agy-hud', exec: 'node dist/agy-hud.js doctor' }
+        { name: 'agy-hud:doctor', description: 'Health check and diagnostics for agy-hud', exec: 'node dist/agy-hud.js doctor' },
+        { name: 'agy-hud:uninstall', description: 'Uninstall agy-hud and remove statusline configuration', exec: 'node dist/agy-hud.js uninstall' }
       ]
     }, null, 2);
     fs.writeFileSync(targetPluginJson, pluginJsonContent, 'utf-8');

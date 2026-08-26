@@ -26,7 +26,7 @@ ${style('Usage:', colors.bold)}
   npx @allenmuu/agy-hud preview        Preview current HUD layout and colors
   npx @allenmuu/agy-hud update-quota   Update cached quota limits from Antigravity /usage
   npx @allenmuu/agy-hud quota          Display cached quota information
-  npx @allenmuu/agy-hud uninstall      Remove agy-hud plugin and disable statusline
+  npx @allenmuu/agy-hud uninstall      Remove agy-hud plugin and disable statusline (use --purge to remove config)
   npx @allenmuu/agy-hud --version      Show current version
   npx @allenmuu/agy-hud --help         Show this help message
 
@@ -84,9 +84,13 @@ async function main() {
       break;
 
     case 'uninstall':
-    case 'remove':
-      await runUninstall();
+    case 'remove': {
+      const purge = args.includes('--purge') || args.includes('-p') || args.includes('--all');
+      const force = args.includes('--force') || args.includes('-f') || args.includes('-y') || args.includes('--yes');
+      const keepConfig = args.includes('--keep-config');
+      await runUninstall({ purge, force, keepConfig });
       break;
+    }
 
     case 'preview': {
       const config = loadConfig();

@@ -68,6 +68,23 @@ agy agy-hud:configure
 
 ---
 
+### 4. Uninstallation
+
+To cleanly remove `agy-hud` and deregister the statusline from Antigravity:
+
+```bash
+# Clean uninstall (removes statusline hook & plugin files, preserves config)
+npx @allenmuu/agy-hud uninstall
+
+# Complete purge (removes plugin files, config, and quota cache)
+npx @allenmuu/agy-hud uninstall --purge
+
+# Or from inside Antigravity CLI:
+agy agy-hud:uninstall
+```
+
+---
+
 ### 📦 Alternative: Manual Archive Install
 
 If not using npm/npx, you can download the release archive:
@@ -113,7 +130,7 @@ agy agy-hud:doctor
 | `npx @allenmuu/agy-hud preview` | Render live preview of HUD statusline in terminal |
 | `npx @allenmuu/agy-hud update-quota` | Update quota cache from `/usage` output text |
 | `npx @allenmuu/agy-hud quota` | Inspect current cached multi-model rate limits |
-| `npx @allenmuu/agy-hud uninstall` | Cleanly remove plugin and deregister statusline |
+| `npx @allenmuu/agy-hud uninstall` | Cleanly remove plugin and deregister statusline (`--purge` to remove config) |
 
 ---
 
