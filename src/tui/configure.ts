@@ -42,7 +42,7 @@ export async function runConfigure(): Promise<void> {
     config.display.preset = config.preset;
 
     // 2. Choose Language
-    console.log(style('\n[2/3] Select Language:', colors.bold));
+    console.log(style('\n[2/4] Select Language:', colors.bold));
     console.log('  1) 简体中文 (zh-Hans)');
     console.log('  2) 繁體中文 (zh-Hant)');
     console.log('  3) English  (en)');
@@ -54,8 +54,24 @@ export async function runConfigure(): Promise<void> {
 
     config.display.language = config.language;
 
-    // 3. Feature Toggles
-    console.log(style('\n[3/3] Feature Toggles (Y/n):', colors.bold));
+    // 3. Context Value Format
+    console.log(style('\n[3/4] Context Bar Value Format:', colors.bold));
+    console.log('  1) Both       (e.g. 9% (87k/1.0M))');
+    console.log('  2) Percent    (e.g. 9%)');
+    console.log('  3) Tokens     (e.g. 87k/1.0M)');
+    console.log('  4) Remaining  (e.g. 91% remaining)');
+    const contextChoice = await askQuestion(
+      rl,
+      style(`Enter choice (1-4) [current: ${config.display.contextValue}]: `, colors.brightYellow)
+    );
+
+    if (contextChoice === '1') config.display.contextValue = 'both';
+    else if (contextChoice === '2') config.display.contextValue = 'percent';
+    else if (contextChoice === '3') config.display.contextValue = 'tokens';
+    else if (contextChoice === '4') config.display.contextValue = 'remaining';
+
+    // 4. Feature Toggles
+    console.log(style('\n[4/4] Feature Toggles (Y/n):', colors.bold));
 
     const askToggle = async (label: string, current: boolean): Promise<boolean> => {
       const resp = await askQuestion(rl, `${label} (current: ${current ? 'ON' : 'OFF'}) [y/n]: `);

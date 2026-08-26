@@ -4,7 +4,7 @@
   "description": "Real-time, high-performance status-line HUD plugin for Google Antigravity CLI",
   "main": "dist/agy-hud.js",
   "bin": {
-    "agy-hud": "./dist/agy-hud.js"
+    "agy-hud": "dist/agy-hud.js"
   },
   "type": "module",
   "publishConfig": {

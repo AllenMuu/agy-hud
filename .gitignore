@@ -2,5 +2,7 @@ node_modules/
 dist/
 stage/
 *.tar.gz
+*.tgz
 .DS_Store
 *.log
+
