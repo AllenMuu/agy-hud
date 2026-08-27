@@ -151,4 +151,123 @@ describe('renderHUD', () => {
     expect(output).toContain('功能/用户认证与权限系统重构');
     expect(output).toContain('Context');
   });
+
+  it('should format context bar with contextValue: both correctly', () => {
+    const state = createMockState();
+    state.contextTokens = {
+      used: 87000,
+      limit: 1000000,
+      percent: 9,
+    };
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'minimal' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'minimal' as const,
+        contextValue: 'both' as const,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    expect(output).toContain('Context');
+    expect(output).toContain('9% (87k/1.0M)');
+  });
+
+  it('should format context bar with contextValue: tokens correctly', () => {
+    const state = createMockState();
+    state.contextTokens = {
+      used: 87000,
+      limit: 1000000,
+      percent: 9,
+    };
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'minimal' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'minimal' as const,
+        contextValue: 'tokens' as const,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    expect(output).toContain('87k/1.0M');
+    expect(output).not.toContain('9%');
+  });
+
+  it('should format context bar with contextValue: remaining correctly', () => {
+    const state = createMockState();
+    state.contextTokens = {
+      used: 87000,
+      limit: 1000000,
+      percent: 9,
+    };
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'minimal' as const,
+      language: 'en' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'minimal' as const,
+        language: 'en' as const,
+        contextValue: 'remaining' as const,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    expect(output).toContain('91% rem.');
+  });
+
+  it('should display OVERFLOW indicator when context tokens exceed 100% (en)', () => {
+    const state = createMockState();
+    state.contextTokens = {
+      used: 1200000,
+      limit: 1000000,
+      percent: 120,
+    };
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'minimal' as const,
+      language: 'en' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'minimal' as const,
+        language: 'en' as const,
+        contextValue: 'both' as const,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    expect(output).toContain('120% (1.2M/1.0M) [OVERFLOW]');
+  });
+
+  it('should display 已超限 indicator when context tokens exceed 100% (zh)', () => {
+    const state = createMockState();
+    state.contextTokens = {
+      used: 1200000,
+      limit: 1000000,
+      percent: 120,
+    };
+
+    const config = {
+      ...DEFAULT_CONFIG,
+      preset: 'minimal' as const,
+      language: 'zh-Hans' as const,
+      display: {
+        ...DEFAULT_CONFIG.display,
+        preset: 'minimal' as const,
+        language: 'zh-Hans' as const,
+        contextValue: 'percent' as const,
+      },
+    };
+
+    const output = stripAnsi(renderHUD(state, config));
+    expect(output).toContain('120% [已超限]');
+  });
 });
+
