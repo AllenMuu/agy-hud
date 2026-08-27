@@ -5,6 +5,7 @@ import {
   getGlobalConfigDir,
   getGlobalConfigPath,
   saveGlobalConfig,
+  loadConfig,
   getGlobalPluginDir,
   deployPluginFiles,
   updateAntigravitySettings,
@@ -50,7 +51,7 @@ export async function runSetup(): Promise<void> {
   // 4. Live Preview
   console.log(style(`\n[4/4] Live HUD Preview:`, colors.dim));
   console.log(style('─'.repeat(60), colors.gray));
-  console.log(renderPreview(DEFAULT_CONFIG));
+  console.log(renderPreview(loadConfig()));
   console.log(style('─'.repeat(60), colors.gray));
 
   console.log(style(`\n🎉 Installation Complete!\n`, colors.bold, colors.brightGreen));

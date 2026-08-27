@@ -58,11 +58,11 @@ export function aggregateState(payload: AntigravityStdinPayload, config: HUDConf
   if (cw?.used_percentage !== undefined) {
     percent = Math.round(cw.used_percentage);
   } else if (cw?.remaining_percentage !== undefined) {
-    percent = Math.max(0, Math.min(100, Math.round(100 - cw.remaining_percentage)));
+    percent = Math.max(0, Math.round(100 - cw.remaining_percentage));
   } else if (ctx?.tokens_percent !== undefined) {
     percent = Math.round(ctx.tokens_percent);
   } else if (limit > 0) {
-    percent = Math.max(0, Math.min(100, Math.round((used / limit) * 100)));
+    percent = Math.max(0, Math.round((used / limit) * 100));
   }
 
   // 5. Transcript analysis (Tail chunk scanner)

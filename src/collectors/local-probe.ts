@@ -1,4 +1,5 @@
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import { promisify } from 'node:util';
@@ -261,8 +262,31 @@ export function triggerBackgroundQuotaSync(): void {
   if (now - lastBackgroundProbeTime < BACKGROUND_PROBE_INTERVAL_MS) {
     return;
   }
-  lastBackgroundProbeTime = now;
 
-  // Run in detached background promise
+  // Cross-process throttle check using cached updatedAt
+  const existing = loadQuotaCache();
+  if (existing?.updatedAt && now - existing.updatedAt < BACKGROUND_PROBE_INTERVAL_MS) {
+    lastBackgroundProbeTime = existing.updatedAt;
+    return;
+  }
+
+  lastBackgroundProbeTime = now;
+  // Mark updatedAt in cache to avoid concurrent redundant probes across CLI runs
+  saveQuotaCache({ updatedAt: now });
+
+  try {
+    const entry = process.argv[1];
+    if (entry && fs.existsSync(entry) && !process.stdin.isTTY) {
+      // In statusline mode, spawn detached background child so statusline exits immediately (<10ms)
+      const child = spawn(process.execPath, [entry, 'refresh-quota'], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+      return;
+    }
+  } catch {}
+
+  // Fallback: in-process detached background promise
   probeLocalAntigravityQuota().catch(() => {});
 }

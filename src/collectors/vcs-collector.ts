@@ -37,12 +37,15 @@ export function getVCSState(workspaceDir: string, config: GitStatusConfig): VCSS
 
   // 2. Fast path: read .git/HEAD directly without spawning subprocess
   let gitDir = path.join(workspaceDir, '.git');
-  let isGit = fs.existsSync(gitDir);
+  let isGit = false;
 
-  if (!isGit) {
-    // Check if within a git worktree or submodule (.git is a file)
-    try {
-      if (fs.existsSync(gitDir) && fs.statSync(gitDir).isFile()) {
+  try {
+    if (fs.existsSync(gitDir)) {
+      const stat = fs.statSync(gitDir);
+      if (stat.isDirectory()) {
+        isGit = true;
+      } else if (stat.isFile()) {
+        // Git worktree or submodule (.git is a file pointing to gitdir: ...)
         const content = fs.readFileSync(gitDir, 'utf-8');
         const match = content.match(/gitdir:\s*(.+)/);
         if (match) {
@@ -50,8 +53,8 @@ export function getVCSState(workspaceDir: string, config: GitStatusConfig): VCSS
           isGit = fs.existsSync(gitDir);
         }
       }
-    } catch {}
-  }
+    }
+  } catch {}
 
   if (!isGit) {
     return emptyState;
